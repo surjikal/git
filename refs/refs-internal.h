@@ -32,6 +32,13 @@ struct ref_transaction;
 #define REF_HAVE_OLD (1 << 3)
 
 /*
+ * Used as a flag in ref_update::flags when we want to log a ref
+ * update but not actually perform it.  This is used when a symbolic
+ * ref update is split up.
+ */
+#define REF_LOG_ONLY (1 << 7)
+
+/*
  * Return the length of time to retry acquiring a loose reference lock
  * before giving up, in milliseconds:
  */
@@ -556,6 +563,21 @@ typedef int copy_ref_fn(struct ref_store *ref_store,
 			  const char *oldref, const char *newref,
 			  const char *logmsg);
 
+typedef int write_pseudoref_fn(struct ref_store *ref_store,
+			       const char *pseudoref,
+			       const struct object_id *oid,
+			       const struct object_id *old_oid,
+			       struct strbuf *err);
+
+/*
+ * Deletes a pseudoref. Deletion always succeeds (even if the pseudoref doesn't
+ * exist.), except if old_oid is specified. If it is, it can fail due to lock
+ * failure, failure reading the old OID, or an OID mismatch
+ */
+typedef int delete_pseudoref_fn(struct ref_store *ref_store,
+				const char *pseudoref,
+				const struct object_id *old_oid);
+
 /*
  * Iterate over the references in `ref_store` whose names start with
  * `prefix`. `prefix` is matched as a literal string, without regard
@@ -655,6 +677,9 @@ struct ref_storage_be {
 	rename_ref_fn *rename_ref;
 	copy_ref_fn *copy_ref;
 
+	write_pseudoref_fn *write_pseudoref;
+	delete_pseudoref_fn *delete_pseudoref;
+
 	ref_iterator_begin_fn *iterator_begin;
 	read_raw_ref_fn *read_raw_ref;
 
@@ -668,6 +693,7 @@ struct ref_storage_be {
 };
 
 extern struct ref_storage_be refs_be_files;
+extern struct ref_storage_be refs_be_reftable;
 extern struct ref_storage_be refs_be_packed;
 
 /*
@@ -686,5 +712,11 @@ struct ref_store {
  */
 void base_ref_store_init(struct ref_store *refs,
 			 const struct ref_storage_be *be);
+
+/*
+ * Print out ref operations as they occur. Useful for debugging alternate ref
+ * backends.
+ */
+struct ref_store *debug_wrap(struct ref_store *store);
 
 #endif /* REFS_REFS_INTERNAL_H */

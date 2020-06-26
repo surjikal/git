@@ -884,8 +884,9 @@ static void update_refs_for_switch(const struct checkout_opts *opts,
 
 	reflog_msg = getenv("GIT_REFLOG_ACTION");
 	if (!reflog_msg)
-		strbuf_addf(&msg, "checkout: moving from %s to %s",
-			old_desc ? old_desc : "(invalid)", new_branch_info->name);
+		strbuf_addf(&msg, "checkout: moving from %s to %s\n",
+			    old_desc ? old_desc : "(invalid)",
+			    new_branch_info->name);
 	else
 		strbuf_insertstr(&msg, 0, reflog_msg);
 
