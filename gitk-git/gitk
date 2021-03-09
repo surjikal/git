@@ -9821,34 +9821,34 @@ proc revert {} {
 proc resethead {} {
     global mainhead rowmenuid confirm_ok resettype NS
 
-    set confirm_ok 0
-    set w ".confirmreset"
-    ttk_toplevel $w
-    make_transient $w .
-    wm title $w [mc "Confirm reset"]
-    ${NS}::label $w.m -text \
-        [mc "Reset branch %s to %s?" $mainhead [string range $rowmenuid 0 7]]
-    pack $w.m -side top -fill x -padx 20 -pady 20
-    ${NS}::labelframe $w.f -text [mc "Reset type:"]
-    set resettype mixed
-    ${NS}::radiobutton $w.f.soft -value soft -variable resettype \
-        -text [mc "Soft: Leave working tree and index untouched"]
-    grid $w.f.soft -sticky w
-    ${NS}::radiobutton $w.f.mixed -value mixed -variable resettype \
-        -text [mc "Mixed: Leave working tree untouched, reset index"]
-    grid $w.f.mixed -sticky w
-    ${NS}::radiobutton $w.f.hard -value hard -variable resettype \
-        -text [mc "Hard: Reset working tree and index\n(discard ALL local changes)"]
-    grid $w.f.hard -sticky w
-    pack $w.f -side top -fill x -padx 4
-    ${NS}::button $w.ok -text [mc OK] -command "set confirm_ok 1; destroy $w"
-    pack $w.ok -side left -fill x -padx 20 -pady 20
-    ${NS}::button $w.cancel -text [mc Cancel] -command "destroy $w"
-    bind $w <Key-Escape> [list destroy $w]
-    pack $w.cancel -side right -fill x -padx 20 -pady 20
-    bind $w <Visibility> "grab $w; focus $w"
-    tkwait window $w
-    if {!$confirm_ok} return
+    # set confirm_ok 0
+    # set w ".confirmreset"
+    # ttk_toplevel $w
+    # make_transient $w .
+    # wm title $w [mc "Confirm reset"]
+    # ${NS}::label $w.m -text \
+    #     [mc "Reset branch %s to %s?" $mainhead [string range $rowmenuid 0 7]]
+    # pack $w.m -side top -fill x -padx 20 -pady 20
+    # ${NS}::labelframe $w.f -text [mc "Reset type:"]
+    set resettype hard
+    # ${NS}::radiobutton $w.f.soft -value soft -variable resettype \
+    #     -text [mc "Soft: Leave working tree and index untouched"]
+    # grid $w.f.soft -sticky w
+    # ${NS}::radiobutton $w.f.mixed -value mixed -variable resettype \
+    #     -text [mc "Mixed: Leave working tree untouched, reset index"]
+    # grid $w.f.mixed -sticky w
+    # ${NS}::radiobutton $w.f.hard -value hard -variable resettype \
+    #     -text [mc "Hard: Reset working tree and index\n(discard ALL local changes)"]
+    # grid $w.f.hard -sticky w
+    # pack $w.f -side top -fill x -padx 4
+    # ${NS}::button $w.ok -text [mc OK] -command "set confirm_ok 1; destroy $w"
+    # pack $w.ok -side left -fill x -padx 20 -pady 20
+    # ${NS}::button $w.cancel -text [mc Cancel] -command "destroy $w"
+    # bind $w <Key-Escape> [list destroy $w]
+    # pack $w.cancel -side right -fill x -padx 20 -pady 20
+    # bind $w <Visibility> "grab $w; focus $w"
+    # tkwait window $w
+    # if {!$confirm_ok} return
     if {[catch {set fd [open \
             [list | git reset --$resettype $rowmenuid 2>@1] r]} err]} {
         error_popup $err
