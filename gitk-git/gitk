@@ -9844,7 +9844,7 @@ proc resethead {} {
         [mc "Reset branch %s to %s?" $mainhead [string range $rowmenuid 0 7]]
     pack $w.m -side top -fill x -padx 20 -pady 20
     ${NS}::labelframe $w.f -text [mc "Reset type:"]
-    set resettype mixed
+    set resettype hard
     ${NS}::radiobutton $w.f.soft -value soft -variable resettype \
         -text [mc "Soft: Leave working tree and index untouched"]
     grid $w.f.soft -sticky w
