@@ -295,6 +295,10 @@ proc parseviewrevs {view revs} {
         set revs HEAD
     } elseif {[lsearch -exact $revs --all] >= 0} {
         lappend revs HEAD
+        set stashesfd [open [concat | git stash list --pretty=format:%H] r]
+        while {[gets $stashesfd stashline] >= 0} {
+            lappend revs $stashline
+        }
     }
     if {[catch {set ids [eval exec git rev-parse $revs]} err]} {
         # we get stdout followed by stderr in $err
@@ -1820,6 +1824,16 @@ proc readrefs {} {
         }
     }
     catch {close $refd}
+    set stashesidsrefsfd [open [list | git stash list {--pretty=format:%H %gD}] r]
+    while {[gets $stashesidsrefsfd line] >= 0} {
+        if {[string index $line 40] ne " "} continue
+        set id [string range $line 0 39]
+        set ref [string range $line 41 end]
+        set name [string range $ref 5 end]
+        set otherrefids($name) $id
+        lappend idotherrefs($id) $name
+    }
+    catch {close $stashesidsrefsfd}
     set mainhead {}
     set mainheadid {}
     catch {
