@@ -291,6 +291,20 @@ set _githtmldir {}
 set _reponame {}
 set _shellpath {@@SHELL_PATH@@}
 
+
+# variables for theming
+set color_green        {#49D86D}
+set color_purple       {#4a405c}
+set color_blue         {#C4A9F4}
+set color_red          {#FF6E67}
+set color_cyan         {#9AEDFD}
+set color_cyan_bright  {#E2EFFA}
+set color_green_bright {#88F397}
+set color_grey         {#333333}
+set color_black        {#000000}
+
+
+
 set _trace [lsearch -exact $argv --trace]
 if {$_trace >= 0} {
 	set argv [lreplace $argv $_trace $_trace]
@@ -587,7 +601,7 @@ proc _open_stdout_stderr {cmd} {
 			set fd [open [concat [list | ] $cmd] r]
 		} err]} {
 		if {   [lindex $cmd end] eq {2>@1}
-		    && $err eq {can not find channel named "1"}
+			&& $err eq {can not find channel named "1"}
 			} {
 			# Older versions of Tcl 8.4 don't have this 2>@1 IO
 			# redirect operator.  Fallback to |& cat for those.
@@ -739,7 +753,12 @@ proc rmsel_tag {text} {
 	return $text
 }
 
-wm withdraw .
+# Causes git-gui to crash on macOS 13 beta
+# when opening it from within a repository directory
+if {![is_MacOSX]} {
+	wm withdraw .
+}
+
 set root_exists 0
 bind . <Visibility> {
 	bind . <Visibility> {}
@@ -787,6 +806,16 @@ if {[is_Windows]} {
 ## config defaults
 
 set cursor_ptr arrow
+
+# For whatever reason, Tk does not apply font scaling to default fonts,
+# but applies font scaling when setting size explicitly.
+# Default -size 10 is still 10, when you look at it with `font actual ...`,
+# but explicit -size 10 becomes 10 * scale factor.
+# So, we need to configure fonts to use their default font sizes, but scaled.
+foreach font_name [font names] {
+	font configure $font_name -size [font actual $font_name -size]
+}
+
 font create font_ui
 if {[lsearch -exact [font names] TkDefaultFont] != -1} {
 	eval [linsert [font actual TkDefaultFont] 0 font configure font_ui]
@@ -1177,6 +1206,17 @@ proc load_config {include_global} {
 ##
 ## feature option selection
 
+disable_option nopushbutton
+for {set i 0} {$i < [llength $argv]} {incr i} {
+	set a [lindex $argv $i]
+	switch -- $a {
+	--nopushbutton {
+		enable_option nopushbutton
+		set argv [lreplace $argv $i $i]
+	}
+	}
+}
+
 if {[regexp {^git-(.+)$} [file tail $argv0] _junk subcommand]} {
 	unset _junk
 } else {
@@ -1364,6 +1404,11 @@ set last_revert_enc {}
 set nullid "0000000000000000000000000000000000000000"
 set nullid2 "0000000000000000000000000000000000000001"
 
+set display_untracked 0
+if {[is_config_true gui.displayuntracked]} {
+	set display_untracked 1
+}
+
 ######################################################################
 ##
 ## task management
@@ -1515,7 +1560,7 @@ proc have_info_exclude {} {
 }
 
 proc rescan_stage2 {fd after} {
-	global rescan_active buf_rdi buf_rdf buf_rlo
+	global rescan_active buf_rdi buf_rdf buf_rlo display_untracked
 
 	if {$fd ne {}} {
 		read $fd
@@ -1555,7 +1600,7 @@ proc rescan_stage2 {fd after} {
 	fileevent $fd_di readable [list read_diff_index $fd_di $after]
 	fileevent $fd_df readable [list read_diff_files $fd_df $after]
 
-	if {[is_config_true gui.displayuntracked]} {
+	if {$display_untracked == 1} {
 		set fd_lo [eval git_read ls-files --others -z $ls_others]
 		fconfigure $fd_lo -blocking 0 -translation binary -encoding binary
 		fileevent $fd_lo readable [list read_ls_others $fd_lo $after]
@@ -1941,6 +1986,7 @@ proc display_all_files {} {
 	global file_states file_lists
 	global last_clicked
 	global files_warning
+	global search_var
 
 	$ui_index conf -state normal
 	$ui_workdir conf -state normal
@@ -1953,8 +1999,13 @@ proc display_all_files {} {
 	set file_lists($ui_workdir) [list]
 
 	set to_display [lsort [array names file_states]]
+
 	set display_limit [get_config gui.maxfilesdisplayed]
 	set displayed 0
+
+	# foreach file_with_time $sorted_files {
+	# 	set path [lindex $file_with_time 0]
+	# }
 	foreach path $to_display {
 		set s $file_states($path)
 		set m [lindex $s 0]
@@ -1965,7 +2016,7 @@ proc display_all_files {} {
 				# do not repeatedly warn:
 				set files_warning 1
 				info_popup [mc "Display limit (gui.maxfilesdisplayed = %s) reached, not showing all %s files." \
-					$display_limit [llength $to_display]]
+					$display_limit [llength $sorted_files]]
 			}
 			continue
 		}
@@ -1982,9 +2033,11 @@ proc display_all_files {} {
 			set s [string index $m 1]
 		}
 		if {$s ne {_}} {
-			display_all_files_helper $ui_workdir $path \
-				$icon_name $s
-			incr displayed
+			if {$search_var eq "" || [string match "*$search_var*" $path]} {
+				display_all_files_helper $ui_workdir $path \
+					$icon_name $s
+				incr displayed
+			}
 		}
 	}
 
@@ -2005,7 +2058,7 @@ static unsigned char mask_bits[] = {
 	0xfe, 0x1f, 0xfe, 0x1f, 0xfe, 0x1f};
 }
 
-image create bitmap file_plain -background white -foreground black -data {
+image create bitmap file_plain -background white -foreground $color_black -data {
 #define plain_width 14
 #define plain_height 15
 static unsigned char plain_bits[] = {
@@ -2014,7 +2067,7 @@ static unsigned char plain_bits[] = {
 	0x02, 0x10, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_mod -background white -foreground blue -data {
+image create bitmap file_mod -background white -foreground $color_cyan -data {
 #define mod_width 14
 #define mod_height 15
 static unsigned char mod_bits[] = {
@@ -2023,7 +2076,7 @@ static unsigned char mod_bits[] = {
 	0xfa, 0x17, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_fulltick -background white -foreground "#007000" -data {
+image create bitmap file_fulltick -background white -foreground $color_green -data {
 #define file_fulltick_width 14
 #define file_fulltick_height 15
 static unsigned char file_fulltick_bits[] = {
@@ -2032,7 +2085,7 @@ static unsigned char file_fulltick_bits[] = {
 	0x62, 0x10, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_question -background white -foreground black -data {
+image create bitmap file_question -background white -foreground $color_red -data {
 #define file_question_width 14
 #define file_question_height 15
 static unsigned char file_question_bits[] = {
@@ -2041,7 +2094,7 @@ static unsigned char file_question_bits[] = {
 	0x62, 0x10, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_removed -background white -foreground red -data {
+image create bitmap file_removed -background white -foreground $color_red -data {
 #define file_removed_width 14
 #define file_removed_height 15
 static unsigned char file_removed_bits[] = {
@@ -2050,7 +2103,7 @@ static unsigned char file_removed_bits[] = {
 	0x1a, 0x16, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_merge -background white -foreground blue -data {
+image create bitmap file_merge -background white -foreground $color_blue -data {
 #define file_merge_width 14
 #define file_merge_height 15
 static unsigned char file_merge_bits[] = {
@@ -2059,7 +2112,7 @@ static unsigned char file_merge_bits[] = {
 	0xfa, 0x17, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_statechange -background white -foreground green -data {
+image create bitmap file_statechange -background white -foreground $color_green -data {
 #define file_statechange_width 14
 #define file_statechange_height 15
 static unsigned char file_statechange_bits[] = {
@@ -2080,7 +2133,7 @@ set all_icons(T$ui_index)   file_statechange
 
 set all_icons(_$ui_workdir) file_plain
 set all_icons(M$ui_workdir) file_mod
-set all_icons(D$ui_workdir) file_question
+set all_icons(D$ui_workdir) file_removed
 set all_icons(U$ui_workdir) file_merge
 set all_icons(O$ui_workdir) file_plain
 set all_icons(T$ui_workdir) file_statechange
@@ -2476,7 +2529,7 @@ proc select_first_diff {after} {
 	global ui_workdir
 
 	if {[find_next_diff $ui_workdir {} 1 {^_?U}] ||
-	    [find_next_diff $ui_workdir {} 1 {[^O]$}]} {
+		[find_next_diff $ui_workdir {} 1 {[^O]$}]} {
 		next_diff $after
 	} else {
 		uplevel #0 $after
@@ -2704,6 +2757,24 @@ proc focus_widget {widget} {
 	}
 }
 
+proc hotkey_apply_or_revert_lines {revert} {
+	global ui_diff
+	set selected [$ui_diff tag nextrange sel 0.0]
+	if {$selected == {}} {
+		if {$revert} {
+			do_revert_selection
+		}
+	} else {
+		apply_or_revert_range_or_line 0 0 $revert
+	}
+}
+
+proc toggle_display_untracked {} {
+	global display_untracked
+	set display_untracked [expr !$display_untracked]
+	do_rescan
+}
+
 proc toggle_commit_type {} {
 	global commit_type_is_amend
 	set commit_type_is_amend [expr !$commit_type_is_amend]
@@ -2904,6 +2975,16 @@ proc commit_btn_caption {} {
 
 if {[is_enabled multicommit] || [is_enabled singlecommit]} {
 	menu .mbar.commit
+
+	.mbar.commit add checkbutton \
+		-label [mc "Display Untracked"] \
+		-accelerator $M1T-G \
+		-variable display_untracked \
+		-command ui_do_rescan
+
+	lappend disable_on_lock \
+		[list .mbar.commit entryconf [.mbar.commit index last] -state]
+	.mbar.commit add separator
 
 	if {![is_enabled nocommit]} {
 		.mbar.commit add checkbutton \
@@ -3108,7 +3189,7 @@ proc normalize_relpath {path} {
 	foreach item [file split $path] {
 		if {$item eq {.}} continue
 		if {$item eq {..} && [llength $elements] > 0
-		    && [lindex $elements end] ne {..}} {
+			&& [lindex $elements end] ne {..}} {
 			set elements [lrange $elements 0 end-1]
 			continue
 		}
@@ -3236,21 +3317,60 @@ default {
 }
 }
 
-# -- Branch Control
+# -- Header Control
 #
-${NS}::frame .branch
-if {!$use_ttk} {.branch configure -borderwidth 1 -relief sunken}
-${NS}::label .branch.l1 \
-	-text [mc "Current Branch:"] \
-	-anchor w \
-	-justify left
-${NS}::label .branch.cb \
+${NS}::frame .header
+if {!$use_ttk} {.header configure -borderwidth 1 -relief sunken}
+${NS}::label .header.cb \
 	-textvariable current_branch \
 	-anchor w \
-	-justify left
-pack .branch.l1 -side left
-pack .branch.cb -side left -fill x
-pack .branch -side top -fill x
+	-justify right
+
+${NS}::frame .header.buttons
+
+${NS}::button .header.buttons.rescan -text [mc Rescan] \
+	-command ui_do_rescan
+pack .header.buttons.rescan -side top -fill x
+lappend disable_on_lock \
+	{.header.buttons.rescan conf -state}
+
+${NS}::button .header.buttons.incall -text [mc "Stage Changed"] \
+	-command do_add_all
+pack .header.buttons.incall -side top -fill x
+lappend disable_on_lock \
+	{.header.buttons.incall conf -state}
+
+${NS}::checkbutton .header.buttons.untracked \
+	-text [mc "Display Untracked"] \
+	-variable display_untracked \
+	-command ui_do_rescan
+
+lappend disable_on_lock \
+	[list .header.buttons.untracked conf -state]
+
+
+${NS}::frame .header.search_frame
+pack .header.search_frame -side top -fill x
+
+set search_var ""
+${NS}::entry .header.search_frame.entry -textvariable search_var
+pack .header.search_frame.entry -side left -expand 1 -fill x
+
+proc filter_unstaged_files {varName index op} {
+	display_all_files
+}
+
+# Trigger the filter function when search_var changes
+trace add variable search_var write filter_unstaged_files
+
+
+
+pack .header.buttons -side left -fill x
+pack .header.buttons.rescan -side left -fill x -padx 7
+pack .header.buttons.incall -side left -fill x -padx 7
+pack .header.buttons.untracked -side left -fill x -padx 7
+pack .header.cb -side right -fill x
+pack .header -side top -fill x -padx 7 -pady 7
 
 # -- Main Window Layout
 #
@@ -3358,45 +3478,6 @@ if {$have_tk85} {
 	.vpane paneconfigure .vpane.lower -sticky nsew
 }
 
-# -- Commit Area Buttons
-#
-${NS}::frame .vpane.lower.commarea.buttons
-${NS}::label .vpane.lower.commarea.buttons.l -text {} \
-	-anchor w \
-	-justify left
-pack .vpane.lower.commarea.buttons.l -side top -fill x
-pack .vpane.lower.commarea.buttons -side left -fill y
-
-${NS}::button .vpane.lower.commarea.buttons.rescan -text [mc Rescan] \
-	-command ui_do_rescan
-pack .vpane.lower.commarea.buttons.rescan -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.rescan conf -state}
-
-${NS}::button .vpane.lower.commarea.buttons.incall -text [mc "Stage Changed"] \
-	-command do_add_all
-pack .vpane.lower.commarea.buttons.incall -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.incall conf -state}
-
-if {![is_enabled nocommitmsg]} {
-	${NS}::button .vpane.lower.commarea.buttons.signoff -text [mc "Sign Off"] \
-		-command do_signoff
-	pack .vpane.lower.commarea.buttons.signoff -side top -fill x
-}
-
-${NS}::button .vpane.lower.commarea.buttons.commit -text [commit_btn_caption] \
-	-command do_commit
-pack .vpane.lower.commarea.buttons.commit -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.commit conf -state}
-
-if {![is_enabled nocommit]} {
-	${NS}::button .vpane.lower.commarea.buttons.push -text [mc Push] \
-		-command do_push_anywhere
-	pack .vpane.lower.commarea.buttons.push -side top -fill x
-}
-
 # -- Commit Message Buffer
 #
 ${NS}::frame .vpane.lower.commarea.buffer
@@ -3432,7 +3513,7 @@ trace add variable commit_type write trace_commit_type
 pack $ui_coml -side left -fill x
 
 if {![is_enabled nocommit]} {
-	pack .vpane.lower.commarea.buffer.header.amend -side right
+	pack .vpane.lower.commarea.buffer.header.amend -side right -padx 7
 }
 
 textframe .vpane.lower.commarea.buffer.frame
@@ -3444,7 +3525,7 @@ ttext $ui_comm \
 	-takefocus 1 \
 	-highlightthickness 1 \
 	-relief sunken \
-	-width $repo_config(gui.commitmsgwidth) -height 9 -wrap none \
+	-width $repo_config(gui.commitmsgwidth) -height 15 -wrap none \
 	-font font_diff \
 	-xscrollcommand {.vpane.lower.commarea.buffer.frame.sbx set} \
 	-yscrollcommand {.vpane.lower.commarea.buffer.frame.sby set}
@@ -3458,9 +3539,9 @@ ${NS}::scrollbar .vpane.lower.commarea.buffer.frame.sby \
 pack .vpane.lower.commarea.buffer.frame.sbx -side bottom -fill x
 pack .vpane.lower.commarea.buffer.frame.sby -side right -fill y
 pack $ui_comm -side left -fill y
-pack .vpane.lower.commarea.buffer.header -side top -fill x
+pack .vpane.lower.commarea.buffer.header -side top -fill x -pady 7
 pack .vpane.lower.commarea.buffer.frame -side left -fill y
-pack .vpane.lower.commarea.buffer -side left -fill y
+pack .vpane.lower.commarea.buffer -side left -fill y -padx 7 -pady 0
 
 # -- Commit Message Buffer Context Menu
 #
@@ -3593,27 +3674,33 @@ foreach {n c} {0 black 1 red4 2 green4 3 yellow4 4 blue4 5 magenta4 6 cyan4 7 gr
 $ui_diff tag configure clr1 -font font_diffbold
 $ui_diff tag configure clr4 -underline 1
 
-$ui_diff tag conf d_info -foreground blue -font font_diffbold
+
+$ui_diff tag conf d_info \
+	-foreground $color_cyan \
+	-font font_diffbold
 
 $ui_diff tag conf d_cr -elide true
-$ui_diff tag conf d_@ -font font_diffbold
-$ui_diff tag conf d_+ -foreground {#00a000}
-$ui_diff tag conf d_- -foreground red
+$ui_diff tag conf d_@ \
+	-foreground $color_black \
+	-background $color_purple
 
-$ui_diff tag conf d_++ -foreground {#00a000}
-$ui_diff tag conf d_-- -foreground red
+$ui_diff tag conf d_+ -foreground $color_green
+$ui_diff tag conf d_- -foreground $color_red
+
+$ui_diff tag conf d_++ -foreground $color_green
+$ui_diff tag conf d_-- -foreground $color_red
 $ui_diff tag conf d_+s \
-	-foreground {#00a000} \
-	-background {#e2effa}
+	-foreground $color_black \
+	-background $color_green_bright
 $ui_diff tag conf d_-s \
-	-foreground red \
-	-background {#e2effa}
+	-foreground black \
+	-background $color_cyan_bright
 $ui_diff tag conf d_s+ \
-	-foreground {#00a000} \
-	-background ivory1
+	-foreground $color_black \
+	-background $color_green_bright
 $ui_diff tag conf d_s- \
-	-foreground red \
-	-background ivory1
+	-foreground $color_black \
+	-background $color_red
 
 $ui_diff tag conf d< \
 	-foreground orange \
@@ -3946,8 +4033,12 @@ bind $ui_diff <$M1B-Key-v> {break}
 bind $ui_diff <$M1B-Key-V> {break}
 bind $ui_diff <$M1B-Key-a> {%W tag add sel 0.0 end;break}
 bind $ui_diff <$M1B-Key-A> {%W tag add sel 0.0 end;break}
-bind $ui_diff <$M1B-Key-j> {do_revert_selection;break}
-bind $ui_diff <$M1B-Key-J> {do_revert_selection;break}
+bind $ui_diff <$M1B-Key-j> {hotkey_apply_or_revert_lines 1; do_rescan;break}
+bind $ui_diff <$M1B-Key-J> {hotkey_apply_or_revert_lines 1; do_rescan;break}
+bind $ui_diff <$M1B-Key-u> {hotkey_apply_or_revert_lines 0; do_rescan;break}
+bind $ui_diff <$M1B-Key-U> {hotkey_apply_or_revert_lines 0; do_rescan;break}
+bind $ui_diff <$M1B-Key-t> {hotkey_apply_or_revert_lines 0; do_rescan;break}
+bind $ui_diff <$M1B-Key-T> {hotkey_apply_or_revert_lines 0; do_rescan;break}
 bind $ui_diff <Key-Up>     {catch {%W yview scroll -1 units};break}
 bind $ui_diff <Key-Down>   {catch {%W yview scroll  1 units};break}
 bind $ui_diff <Key-Left>   {catch {%W xview scroll -1 units};break}
@@ -3973,15 +4064,20 @@ if {[is_enabled transport]} {
 	bind . <$M1B-Key-P> do_push_anywhere
 }
 
+bind . <$M1B-Key-f> {focus .header.search_frame.entry}
+bind . <$M1B-Key-k> {do_gitk --all}
+
 bind .   <Key-F5>     ui_do_rescan
 bind .   <$M1B-Key-r> ui_do_rescan
 bind .   <$M1B-Key-R> ui_do_rescan
-bind .   <$M1B-Key-s> do_signoff
-bind .   <$M1B-Key-S> do_signoff
+# bind .   <$M1B-Key-s> do_signoff
+# bind .   <$M1B-Key-S> do_signoff
 bind .   <$M1B-Key-t> { toggle_or_diff toggle %W }
 bind .   <$M1B-Key-T> { toggle_or_diff toggle %W }
 bind .   <$M1B-Key-u> { toggle_or_diff toggle %W }
 bind .   <$M1B-Key-U> { toggle_or_diff toggle %W }
+bind .   <$M1B-Key-G> toggle_display_untracked
+bind .   <$M1B-Key-g> toggle_display_untracked
 bind .   <$M1B-Key-j> do_revert_selection
 bind .   <$M1B-Key-J> do_revert_selection
 bind .   <$M1B-Key-i> do_add_all
