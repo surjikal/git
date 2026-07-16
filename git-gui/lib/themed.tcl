@@ -80,10 +80,11 @@ proc InitTheme {} {
 	ttk::style configure Padded.TLabel \
 		-padding {5 5} -borderwidth 1 -relief solid
 	# We need a gold frame.
+	global color_bg_panel color_bg_overlay color_danger
 	ttk::style layout Gold.TFrame {
 		Gold.Frame.border -sticky nswe -children {
 			Gold.Frame.fill -sticky nswe}}
-	ttk::style configure Gold.TFrame -background gold -relief flat
+	ttk::style configure Gold.TFrame -background $color_bg_panel -relief flat
 	# listboxes should have a theme border so embed in ttk::frame
 	ttk::style layout SListbox.TFrame {
 		SListbox.Frame.Entry.field -sticky news -border true -children {
@@ -101,10 +102,9 @@ proc InitTheme {} {
 		ttk::style layout Edged.Entry [ttk::style layout TEntry]
 		ttk::style map Edged.Entry {*}[ttk::style map TEntry]
 		ttk::style configure Edged.Entry {*}[ttk::style configure TEntry] \
-			-fieldbackground lightgreen
-		ttk::style map Edged.Entry -fieldbackground {
-			{pressed !disabled} lightpink
-		}
+			-fieldbackground $color_bg_overlay
+		ttk::style map Edged.Entry -fieldbackground \
+			[list {pressed !disabled} $color_danger]
 	} else {
 		# For fancier themes, in particular the Windows ones, the field
 		# element may not support changing the background color. So instead
@@ -128,9 +128,9 @@ proc InitTheme {} {
 		}
 
 		ttk::style configure Edged.Entry {*}[ttk::style configure TEntry] \
-			-background lightgreen -padding 0 -borderwidth 0
+			-background $color_bg_overlay -padding 0 -borderwidth 0
 		ttk::style map Edged.Entry {*}[ttk::style map TEntry] \
-			-background {{pressed !disabled} lightpink}
+			-background [list {pressed !disabled} $color_danger]
 	}
 
 	if {[lsearch [bind . <<ThemeChanged>>] InitTheme] == -1} {
@@ -223,6 +223,9 @@ proc paddedlabel {w args} {
 proc Dialog {w args} {
 	eval [linsert $args 0 toplevel $w -class Dialog]
 	catch {wm attributes $w -type dialog}
+	if {[is_MacOSX]} {
+		catch {wm attributes $w -appearance darkaqua}
+	}
 	pave_toplevel $w
 	return $w
 }

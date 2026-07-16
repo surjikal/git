@@ -619,6 +619,9 @@ method _toplevel {title} {
 	}
 
 	toplevel $w
+	if {[is_MacOSX]} {
+		catch {wm attributes $w -appearance darkaqua}
+	}
 	wm title $w $title
 	wm geometry $w "+[winfo rootx $p]+[winfo rooty $p]"
 }

@@ -22,11 +22,11 @@ constructor dialog {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.create -text [mc Checkout] \
+	rbutton $w.buttons.create -text [mc Checkout] \
 		-default active \
 		-command [cb _checkout]
 	pack $w.buttons.create -side right
-	ttk::button $w.buttons.cancel -text [mc Cancel] \
+	rbutton $w.buttons.cancel -text [mc Cancel] \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5
 	pack $w.buttons -side bottom -fill x -pady 10 -padx 10
@@ -37,12 +37,12 @@ constructor dialog {} {
 
 	ttk::labelframe $w.options -text [mc Options]
 
-	ttk::checkbutton $w.options.fetch \
+	rcheckbutton $w.options.fetch \
 		-text [mc "Fetch Tracking Branch"] \
 		-variable @opt_fetch
 	pack $w.options.fetch -anchor nw
 
-	ttk::checkbutton $w.options.detach \
+	rcheckbutton $w.options.detach \
 		-text [mc "Detach From Local Branch"] \
 		-variable @opt_detach
 	pack $w.options.detach -anchor nw

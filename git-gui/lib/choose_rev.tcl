@@ -460,6 +460,7 @@ method _show_tooltip {pos} {
 
 method _open_tooltip {} {
 	global remote_url
+	global color_bg_overlay color_fg
 
 	set tooltip_timer {}
 	set pos_x [winfo pointerx $w_list]
@@ -497,8 +498,8 @@ method _open_tooltip {} {
 			-relief flat \
 			-borderwidth 0 \
 			-wrap none \
-			-background lightyellow \
-			-foreground black
+			-background $color_bg_overlay \
+			-foreground $color_fg
 		$tooltip_t tag conf section_header -font font_uibold
 		bind $tooltip_wm <Escape> [cb _hide_tooltip]
 		pack $tooltip_t

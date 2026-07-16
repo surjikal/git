@@ -116,15 +116,15 @@ proc do_options {} {
 	wm geometry $w "+[winfo rootx .]+[winfo rooty .]"
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.restore -text [mc "Restore Defaults"] \
+	rbutton $w.buttons.restore -text [mc "Restore Defaults"] \
 		-default normal \
 		-command do_restore_defaults
 	pack $w.buttons.restore -side left
-	ttk::button $w.buttons.save -text [mc Save] \
+	rbutton $w.buttons.save -text [mc Save] \
 		-default active \
 		-command [list do_save_config $w]
 	pack $w.buttons.save -side right
-	ttk::button $w.buttons.cancel -text [mc "Cancel"] \
+	rbutton $w.buttons.cancel -text [mc "Cancel"] \
 		-default normal \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5
@@ -170,7 +170,7 @@ proc do_options {} {
 		foreach f {repo global} {
 			switch -glob -- $type {
 			b {
-				ttk::checkbutton $w.$f.$optid -text $text \
+				rcheckbutton $w.$f.$optid -text $text \
 					-variable ${f}_config_new($name) \
 					-onvalue true \
 					-offvalue false
@@ -206,7 +206,7 @@ proc do_options {} {
 					menu $w.$f.$optid.m
 					build_encoding_menu $w.$f.$optid.m \
 						[list set ${f}_config_new($name)] 1
-					ttk::button $w.$f.$optid.b \
+					rbutton $w.$f.$optid.b \
 						-text [mc "Change"] \
 						-command [list popup_btn_menu \
 							$w.$f.$optid.m $w.$f.$optid.b]
@@ -268,7 +268,7 @@ proc do_options {} {
 
 		ttk::frame $w.global.$name
 		ttk::label $w.global.$name.l -text [mc "%s:" $text]
-		ttk::button $w.global.$name.b \
+		rbutton $w.global.$name.b \
 			-text [mc "Change Font"] \
 			-command [list \
 				tchoosefont \

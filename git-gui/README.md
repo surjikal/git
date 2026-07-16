@@ -1,4 +1,8 @@
-# Git GUI - A graphical user interface for Git
+# Git GUI - SURJ EDITION
+
+![image](https://github.com/user-attachments/assets/461691fc-0ffe-4bc5-9b1a-56f5f6425219)
+
+---
 
 Git GUI allows you to use the [Git source control management
 tools](https://git-scm.com/) via a GUI. This includes staging, committing,

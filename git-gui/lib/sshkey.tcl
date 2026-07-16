@@ -40,7 +40,7 @@ proc do_ssh_key {} {
 
 	ttk::frame $w.header
 	ttk::label $w.header.lbl -textvariable sshkey_title -anchor w
-	ttk::button $w.header.gen -text [mc "Generate Key"] \
+	rbutton $w.header.gen -text [mc "Generate Key"] \
 		-command [list make_ssh_key $w] -state $gen_state
 	pack $w.header.lbl -side left -expand 1 -fill x
 	pack $w.header.gen -side right
@@ -52,10 +52,10 @@ proc do_ssh_key {} {
 	$w.contents configure -inactiveselectbackground $clr
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.close -text [mc Close] \
+	rbutton $w.buttons.close -text [mc Close] \
 		-default active -command [list destroy $w]
 	pack $w.buttons.close -side right
-	ttk::button $w.buttons.copy -text [mc "Copy To Clipboard"] \
+	rbutton $w.buttons.copy -text [mc "Copy To Clipboard"] \
 		-command [list tk_textCopy $w.contents]
 	pack $w.buttons.copy -side left
 	pack $w.buttons -side bottom -fill x -pady 5 -padx 5

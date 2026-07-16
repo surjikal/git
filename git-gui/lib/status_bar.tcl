@@ -92,15 +92,16 @@ constructor two_line {path} {
 }
 
 method ensure_canvas {} {
+	global color_bg_overlay color_accent_emphasis
 	if {[winfo exists $w_c]} {
 		$w_c coords bar 0 0 0 20
 	} else {
 		canvas $w_c \
 			-height [expr {int([winfo reqheight $w_l] * 0.6)}] \
-			-borderwidth 1 \
-			-relief groove \
+			-background $color_bg_overlay \
+			-borderwidth 0 \
 			-highlightt 0
-		$w_c create rectangle 0 0 0 20 -tags bar -fill navy
+		$w_c create rectangle 0 0 0 20 -tags bar -fill $color_accent_emphasis -width 0
 		eval $c_pack
 	}
 }

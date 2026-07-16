@@ -28,6 +28,7 @@ constructor embed {path title} {
 
 method _init {} {
 	global M1B
+	global color_bg color_fg
 
 	if {$is_toplevel} {
 		make_dialog top w -autodelete 0
@@ -46,8 +47,8 @@ method _init {} {
 		-justify left \
 		-font font_uibold
 	text $w_t \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg \
 		-borderwidth 1 \
 		-relief sunken \
 		-width 80 -height 10 \
@@ -78,7 +79,7 @@ method _init {} {
 		"
 
 	if {$is_toplevel} {
-		ttk::button $w.ok -text [mc "Close"] \
+		rbutton $w.ok -text [mc "Close"] \
 			-state disabled \
 			-command [list destroy $w]
 		pack $w.ok -side bottom -anchor e -pady 10 -padx 10
@@ -178,10 +179,11 @@ method insert {txt} {
 }
 
 method done {ok} {
+	global color_success_emphasis color_danger_emphasis color_fg
 	if {$ok} {
 		if {[winfo exists $w.m.s]} {
 			bind $w.m.s <Destroy> [list delete_this $this]
-			$w.m.s conf -background green -foreground black \
+			$w.m.s conf -background $color_success_emphasis -foreground $color_fg \
 				-text [mc "Success"]
 			if {$is_toplevel} {
 				$w.ok conf -state normal
@@ -195,7 +197,7 @@ method done {ok} {
 			_init $this
 		}
 		bind $w.m.s <Destroy> [list delete_this $this]
-		$w.m.s conf -background red -foreground black \
+		$w.m.s conf -background $color_danger_emphasis -foreground $color_fg \
 			-text [mc "Error: Command Failed"]
 		if {$is_toplevel} {
 			$w.ok conf -state normal

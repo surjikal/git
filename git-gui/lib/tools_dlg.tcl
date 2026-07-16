@@ -30,15 +30,15 @@ constructor dialog {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::checkbutton $w.buttons.global \
+	rcheckbutton $w.buttons.global \
 		-text [mc "Add globally"] \
 		-variable @add_global
 	pack $w.buttons.global -side left -padx 5
-	ttk::button $w.buttons.create -text [mc Add] \
+	rbutton $w.buttons.create -text [mc Add] \
 		-default active \
 		-command [cb _add]
 	pack $w.buttons.create -side right
-	ttk::button $w.buttons.cancel -text [mc Cancel] \
+	rbutton $w.buttons.cancel -text [mc Cancel] \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5
 	pack $w.buttons -side bottom -fill x -pady 10 -padx 10
@@ -67,30 +67,30 @@ constructor dialog {} {
 	grid columnconfigure $w.desc 1 -weight 1
 	pack $w.desc -anchor nw -fill x -pady 5 -padx 5
 
-	ttk::checkbutton $w.confirm \
+	rcheckbutton $w.confirm \
 		-text [mc "Show a dialog before running"] \
 		-variable @confirm -command [cb _check_enable_dlg]
 
 	ttk::labelframe $w.dlg -labelwidget $w.confirm
 
-	ttk::checkbutton $w.dlg.askbranch \
+	rcheckbutton $w.dlg.askbranch \
 		-text [mc "Ask the user to select a revision (sets \$REVISION)"] \
 		-variable @ask_branch -state disabled
 	pack $w.dlg.askbranch -anchor w -padx 15
 
-	ttk::checkbutton $w.dlg.askargs \
+	rcheckbutton $w.dlg.askargs \
 		-text [mc "Ask the user for additional arguments (sets \$ARGS)"] \
 		-variable @ask_args -state disabled
 	pack $w.dlg.askargs -anchor w -padx 15
 
 	pack $w.dlg -anchor nw -fill x -pady {0 8} -padx 5
 
-	ttk::checkbutton $w.noconsole \
+	rcheckbutton $w.noconsole \
 		-text [mc "Don't show the command output window"] \
 		-variable @no_console
 	pack $w.noconsole -anchor w -padx 5
 
-	ttk::checkbutton $w.needsfile \
+	rcheckbutton $w.needsfile \
 		-text [mc "Run only if a diff is selected (\$FILENAME not empty)"] \
 		-variable @needs_file
 	pack $w.needsfile -anchor w -padx 5
@@ -180,6 +180,7 @@ field w_names        ; # name list
 
 constructor dialog {} {
 	global repo_config global_config system_config
+	global color_accent
 
 	load_config 1
 
@@ -195,11 +196,11 @@ constructor dialog {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.create -text [mc Remove] \
+	rbutton $w.buttons.create -text [mc Remove] \
 		-default active \
 		-command [cb _remove]
 	pack $w.buttons.create -side right
-	ttk::button $w.buttons.cancel -text [mc Cancel] \
+	rbutton $w.buttons.cancel -text [mc Cancel] \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5
 	pack $w.buttons -side bottom -fill x -pady 10 -padx 10
@@ -221,13 +222,13 @@ constructor dialog {} {
 
 		$w_names insert end $fullname
 		if {![info exists global_config(guitool.$fullname.cmd)]} {
-			$w_names itemconfigure end -foreground blue
+			$w_names itemconfigure end -foreground $color_accent
 			incr local_cnt
 		}
 	}
 
 	if {$local_cnt > 0} {
-		ttk::label $w.colorlbl -foreground blue \
+		ttk::label $w.colorlbl -foreground $color_accent \
 			-text [mc "(Blue denotes repository-local tools)"]
 		pack $w.colorlbl -fill x -pady 5 -padx 5
 	}
@@ -332,16 +333,16 @@ constructor dialog {fullname} {
 
 	ttk::frame $w.buttons
 	if {$is_ask_revs} {
-		ttk::button $w.buttons.visualize \
+		rbutton $w.buttons.visualize \
 			-text [mc Visualize] \
 			-command [cb _visualize]
 		pack $w.buttons.visualize -side left
 	}
-	ttk::button $w.buttons.ok \
+	rbutton $w.buttons.ok \
 		-text [mc OK] \
 		-command [cb _start]
 	pack $w.buttons.ok -side right
-	ttk::button $w.buttons.cancel \
+	rbutton $w.buttons.cancel \
 		-text [mc "Cancel"] \
 		-command [cb _cancel]
 	pack $w.buttons.cancel -side right -padx 5

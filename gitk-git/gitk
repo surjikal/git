@@ -520,11 +520,18 @@ proc parseviewargs {n arglist} {
 proc parseviewrevs {view revs} {
     global vposids vnegids
     global hashlength
+    global showallstashes
 
     if {$revs eq {}} {
         set revs HEAD
     } elseif {[lsearch -exact $revs --all] >= 0} {
         lappend revs HEAD
+        if {$showallstashes} {
+            set stashesfd [open [concat | git stash list --pretty=format:%H] r]
+            while {[gets $stashesfd stashline] >= 0} {
+                lappend revs $stashline
+            }
+        }
     }
     if {[catch {set ids [safe_exec [concat git rev-parse $revs]]} err]} {
         # we get stdout followed by stderr in $err
@@ -2015,14 +2022,20 @@ proc readrefs {} {
     global tagids idtags headids idheads tagobjid upstreamofref
     global otherrefids idotherrefs mainhead mainheadid
     global selecthead selectheadid
-    global hideremotes
+    global hideremotes showallstashes
     global tclencoding
     global hashlength
 
     foreach v {tagids idtags headids idheads otherrefids idotherrefs upstreamofref} {
         unset -nocomplain $v
     }
-    set refd [safe_open_command [list git show-ref -d]]
+
+    if {[tk windowingsystem] eq {aqua}} {
+        set refd [safe_open_command [list git show-ref -d]]
+    } else {
+        set refd [safe_open_command [list | git show-ref -d | grep -v { refs/stash}] r]
+    }
+
     if {$tclencoding != {}} {
         fconfigure $refd -encoding $tclencoding
     }
@@ -2060,6 +2073,20 @@ proc readrefs {} {
         }
     }
     catch {close $refd}
+
+    if {$showallstashes} {
+        set stashesidsrefsfd [open [list | git stash list {--pretty=format:%H %gD}] r]
+        while {[gets $stashesidsrefsfd line] >= 0} {
+            if {[string index $line 40] ne " "} continue
+            set id [string range $line 0 39]
+            set ref [string range $line 41 end]
+            set name [string range $ref 5 end]
+            set otherrefids($name) $id
+            lappend idotherrefs($id) $name
+        }
+        catch {close $stashesidsrefsfd}
+    }
+
     set mainhead {}
     set mainheadid {}
     catch {
@@ -2511,10 +2538,10 @@ proc makewindow {} {
     trace add variable sha1string write sha1change
     pack $sha1entry -side left -pady 2
 
-    ttk::button .tf.bar.leftbut -command goback -state disabled 
+    ttk::button .tf.bar.leftbut -command goback -state disabled
     .tf.bar.leftbut configure -text \u2190 -width 3
     pack .tf.bar.leftbut -side left -fill y
-    ttk::button .tf.bar.rightbut -command goforw -state disabled 
+    ttk::button .tf.bar.rightbut -command goforw -state disabled
     .tf.bar.rightbut configure -text \u2192 -width 3
     pack .tf.bar.rightbut -side left -fill y
 
@@ -10017,7 +10044,7 @@ proc resethead {} {
         [mc "Reset branch %s to %s?" $mainhead [string range $rowmenuid 0 7]]
     pack $w.m -side top -fill x -padx 20 -pady 20
     ttk::labelframe $w.f -text [mc "Reset type:"]
-    set resettype mixed
+    set resettype hard
     ttk::radiobutton $w.f.soft -value soft -variable resettype \
         -text [mc "Soft: Leave working tree and index untouched"]
     grid $w.f.soft -sticky w
@@ -11726,6 +11753,9 @@ proc prefspage_general {notebook} {
     ttk::checkbutton $page.hideremotes -text [mc "Hide remote refs"] \
         -variable hideremotes
     grid x $page.hideremotes -sticky w
+    ${NS}::checkbutton $page.showallstashes -text [mc "Show all stashes"] \
+        -variable showallstashes
+    grid x $page.showallstashes -sticky w
 
     ttk::entry $page.refstohide -textvariable refstohide
     ttk::label $page.refstohidel -text [mc "Refs to hide (space-separated globs)"]
@@ -12129,6 +12159,9 @@ proc prefsok {} {
         } else {
             dohidelocalchanges
         }
+    }
+    if {$showallstashes != $oldprefs(showallstashes)} {
+        reloadcommits
     }
     if {$limitdiffs != $oldprefs(limitdiffs) ||
         ($perfile_attrs && !$oldprefs(perfile_attrs))} {
@@ -12652,6 +12685,7 @@ set maxrefs 20
 set visiblerefs {"master"}
 set maxlinelen 200
 set showlocalchanges 1
+set showallstashes 0
 set limitdiffs 1
 set kscroll 3
 set datetimeformat "%Y-%m-%d %H:%M:%S"
@@ -12793,6 +12827,7 @@ set config_variables {
     refstohide
     remotebgcolor
     selectbgcolor
+    showallstashes
     showlocalchanges
     showneartags
     sortrefsbytype
@@ -12808,6 +12843,7 @@ set config_variables {
     uifgdisabledcolor
     uifont
     visiblerefs
+    want_ttk
     web_browser
     workingfilescirclecolor
     wrapcomment

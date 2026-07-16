@@ -30,11 +30,11 @@ field old_height ; # last known height of $w.file_pane
 
 # Tk UI colors
 #
-variable active_color #c0edc5
+variable active_color #1c3a5e
 variable group_colors {
-	#d6d6d6
-	#e1e1e1
-	#ececec
+	#0d1117
+	#10151c
+	#131820
 }
 
 # Current blame data; cleared/reset on each load
@@ -64,6 +64,7 @@ field tooltip_commit    {} ; # Commit(s) in tooltip
 
 constructor new {i_commit i_path i_jump} {
 	global cursor_ptr M1B M1T
+	global color_bg color_fg color_fg_muted color_bg_panel color_accent color_attention color_black color_bg_active
 	variable active_color
 	variable group_colors
 
@@ -75,11 +76,11 @@ constructor new {i_commit i_path i_jump} {
 
 	set font_w [font measure font_diff "0"]
 
-	gold_frame $w.header
+	gold_frame $w.header -background $color_bg_panel
 	tlabel $w.header.commit_l \
 		-text [mc "Commit:"] \
-		-background gold \
-		-foreground black \
+		-background $color_bg_panel \
+		-foreground $color_fg_muted \
 		-anchor w \
 		-justify left
 	set w_back $w.header.commit_b
@@ -88,9 +89,9 @@ constructor new {i_commit i_path i_jump} {
 		-borderwidth 0 \
 		-relief flat \
 		-state disabled \
-		-background gold \
-		-foreground black \
-		-activebackground gold
+		-background $color_bg_panel \
+		-foreground $color_fg \
+		-activebackground $color_bg_panel
 	bind $w_back <Button-1> "
 		if {\[$w_back cget -state\] eq {normal}} {
 			[cb _history_menu]
@@ -98,20 +99,20 @@ constructor new {i_commit i_path i_jump} {
 		"
 	tlabel $w.header.commit \
 		-textvariable @commit \
-		-background gold \
-		-foreground black \
+		-background $color_bg_panel \
+		-foreground $color_accent \
 		-anchor w \
 		-justify left
 	tlabel $w.header.path_l \
 		-text [mc "File:"] \
-		-background gold \
-		-foreground black \
+		-background $color_bg_panel \
+		-foreground $color_fg_muted \
 		-anchor w \
 		-justify left
 	set w_path $w.header.path
 	tlabel $w_path \
-		-background gold \
-		-foreground black \
+		-background $color_bg_panel \
+		-foreground $color_fg \
 		-anchor w \
 		-justify left
 	pack $w.header.commit_l -side left
@@ -139,8 +140,8 @@ constructor new {i_commit i_path i_jump} {
 		-takefocus 0 \
 		-highlightthickness 0 \
 		-padx 0 -pady 0 \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg_muted \
 		-borderwidth 0 \
 		-state disabled \
 		-wrap none \
@@ -154,8 +155,8 @@ constructor new {i_commit i_path i_jump} {
 		-takefocus 0 \
 		-highlightthickness 0 \
 		-padx 0 -pady 0 \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg \
 		-borderwidth 0 \
 		-state disabled \
 		-wrap none \
@@ -164,7 +165,7 @@ constructor new {i_commit i_path i_jump} {
 		-font font_diff
 	$w_amov tag conf author_abbr -justify right -rmargin 5
 	$w_amov tag conf curr_commit
-	$w_amov tag conf prior_commit -foreground blue -underline 1
+	$w_amov tag conf prior_commit -foreground $color_accent -underline 1
 	$w_amov tag bind prior_commit \
 		<Button-1> \
 		"[cb _load_commit $w_amov @amov_data @%x,%y];break"
@@ -174,8 +175,8 @@ constructor new {i_commit i_path i_jump} {
 		-takefocus 0 \
 		-highlightthickness 0 \
 		-padx 0 -pady 0 \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg \
 		-borderwidth 0 \
 		-state disabled \
 		-wrap none \
@@ -184,7 +185,7 @@ constructor new {i_commit i_path i_jump} {
 		-font font_diff
 	$w_asim tag conf author_abbr -justify right
 	$w_asim tag conf curr_commit
-	$w_asim tag conf prior_commit -foreground blue -underline 1
+	$w_asim tag conf prior_commit -foreground $color_accent -underline 1
 	$w_asim tag bind prior_commit \
 		<Button-1> \
 		"[cb _load_commit $w_asim @asim_data @%x,%y];break"
@@ -194,8 +195,8 @@ constructor new {i_commit i_path i_jump} {
 		-takefocus 0 \
 		-highlightthickness 0 \
 		-padx 0 -pady 0 \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg \
 		-borderwidth 0 \
 		-state disabled \
 		-wrap none \
@@ -203,10 +204,10 @@ constructor new {i_commit i_path i_jump} {
 		-width 80 \
 		-xscrollcommand [list $w.file_pane.out.sbx set] \
 		-font font_diff
-		$w_file configure -inactiveselectbackground darkblue
+		$w_file configure -inactiveselectbackground $color_bg_active
 
 	$w_file tag conf found \
-		-background yellow
+		-background $color_attention -foreground $color_black
 
 	set w_columns [list $w_amov $w_asim $w_line $w_file]
 
@@ -242,8 +243,8 @@ constructor new {i_commit i_path i_jump} {
 
 	set w_cviewer $w.file_pane.cm.t
 	text $w_cviewer \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg \
 		-borderwidth 0 \
 		-state disabled \
 		-wrap none \
@@ -258,9 +259,11 @@ constructor new {i_commit i_path i_jump} {
 	$w_cviewer tag conf header_key \
 		-tabs {3c} \
 		-background $active_color \
+		-foreground $color_fg \
 		-font font_uibold
 	$w_cviewer tag conf header_val \
 		-background $active_color \
+		-foreground $color_fg \
 		-font font_ui
 	$w_cviewer tag raise sel
 	ttk::scrollbar $w.file_pane.cm.sbx \
@@ -1196,6 +1199,7 @@ method _show_tooltip {cur_w pos} {
 }
 
 method _open_tooltip {cur_w} {
+	global color_bg_overlay color_fg
 	set tooltip_timer {}
 	set pos_x [winfo pointerx $cur_w]
 	set pos_y [winfo pointery $cur_w]
@@ -1218,8 +1222,8 @@ method _open_tooltip {cur_w} {
 			-relief flat \
 			-borderwidth 0 \
 			-wrap none \
-			-background lightyellow \
-			-foreground black
+			-background $color_bg_overlay \
+			-foreground $color_fg
 		$tooltip_t tag conf section_header -font font_uibold
 		pack $tooltip_t
 	} else {

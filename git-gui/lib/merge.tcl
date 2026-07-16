@@ -157,15 +157,15 @@ constructor dialog {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.visualize \
+	rbutton $w.buttons.visualize \
 		-text [mc Visualize] \
 		-command [cb _visualize]
 	pack $w.buttons.visualize -side left
-	ttk::button $w.buttons.merge \
+	rbutton $w.buttons.merge \
 		-text [mc Merge] \
 		-command $_start
 	pack $w.buttons.merge -side right
-	ttk::button $w.buttons.cancel \
+	rbutton $w.buttons.cancel \
 		-text [mc "Cancel"] \
 		-command [cb _cancel]
 	pack $w.buttons.cancel -side right -padx 5

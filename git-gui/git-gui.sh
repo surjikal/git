@@ -377,6 +377,42 @@ set _prefix {}
 set _reponame {}
 set _shellpath {@@SHELL_PATH@@}
 
+
+# variables for theming -- GitHub Dark inspired palette
+set color_bg             {#0d1117} ;# app canvas / text widget background
+set color_bg_panel       {#161b22} ;# raised panels: headers, toolbars
+set color_bg_overlay     {#21262d} ;# buttons, inputs, menus
+set color_bg_active      {#30363d} ;# hover / pressed state
+set color_border         {#30363d}
+set color_border_muted   {#21262d}
+set color_border_emphasis {#484f58} ;# crisper border for chip-like controls
+set color_fg             {#e6edf3}
+set color_fg_muted       {#8b949e}
+set color_fg_subtle      {#6e7681}
+set color_accent         {#58a6ff}
+set color_accent_emphasis {#1f6feb}
+set color_success        {#3fb950}
+set color_success_emphasis {#238636}
+set color_danger         {#f85149}
+set color_danger_emphasis {#da3633}
+set color_attention      {#d29922}
+# GitHub's own selected/active-row color is this same solid accent blue
+# (it's also what -default buttons and checked checkboxes use), rather
+# than a desaturated navy -- keeps selection state consistent across the
+# app and gives light text much stronger contrast against it.
+set color_selection_bg   $color_accent_emphasis
+set color_selection_fg   {#ffffff}
+
+# legacy names kept for diff tags / file-status icons, retargeted to the
+# dark palette above.
+set color_green $color_success
+set color_blue  {#a5a2ff}
+set color_red   $color_danger
+set color_cyan  $color_accent
+set color_black {#010409}
+
+
+
 set _trace [lsearch -exact $argv --trace]
 if {$_trace >= 0} {
 	set argv [lreplace $argv $_trace $_trace]
@@ -671,7 +707,12 @@ proc rmsel_tag {text} {
 	return $text
 }
 
-wm withdraw .
+# Causes git-gui to crash on macOS 13 beta
+# when opening it from within a repository directory
+if {![is_MacOSX]} {
+	wm withdraw .
+}
+
 set root_exists 0
 bind . <Visibility> {
 	bind . <Visibility> {}
@@ -749,6 +790,197 @@ if {![is_MacOSX]} {
 	option add *RadioButton.anchor w startupFile
 }
 unset class
+
+######################################################################
+##
+## dark theme (GitHub Dark inspired)
+
+# Native themes (aqua on macOS, vista/xpnative on Windows) largely ignore
+# ttk::style color configuration for buttons/entries/etc, so switch to
+# "clam" -- a pure-Tcl theme that honors every color we set below -- to
+# get a consistent, fully custom dark appearance everywhere.
+ttk::style theme use clam
+
+ttk::style configure . \
+	-background $color_bg \
+	-foreground $color_fg \
+	-fieldbackground $color_bg_overlay \
+	-troughcolor $color_bg \
+	-selectbackground $color_selection_bg \
+	-selectforeground $color_selection_fg \
+	-bordercolor $color_border \
+	-lightcolor $color_bg_overlay \
+	-darkcolor $color_bg_overlay \
+	-insertcolor $color_fg \
+	-font font_ui
+option add *background $color_bg
+option add *foreground $color_fg
+option add *activeBackground $color_bg_active
+option add *activeForeground $color_fg
+option add *selectBackground $color_selection_bg
+option add *selectForeground $color_selection_fg
+option add *disabledForeground $color_fg_subtle
+option add *insertBackground $color_fg
+option add *highlightBackground $color_bg
+option add *highlightColor $color_accent
+option add *troughColor $color_bg
+option add *Listbox.background $color_bg
+option add *Listbox.foreground $color_fg
+option add *Listbox.selectBackground $color_selection_bg
+option add *Listbox.selectForeground $color_selection_fg
+option add *TCombobox*Listbox.background $color_bg_overlay
+option add *TCombobox*Listbox.foreground $color_fg
+option add *TCombobox*Listbox.selectBackground $color_selection_bg
+option add *TCombobox*Listbox.selectForeground $color_selection_fg
+
+ttk::style configure TFrame -background $color_bg
+ttk::style configure TLabel -background $color_bg -foreground $color_fg
+ttk::style configure TLabelframe \
+	-background $color_bg -bordercolor $color_border
+ttk::style configure TLabelframe.Label \
+	-background $color_bg -foreground $color_fg_muted
+
+# A raised bar (toolbars, header controls) that sits a step lighter than the
+# canvas so the chip-like buttons/controls placed on it have something to
+# visibly contrast against, instead of blending into the window background.
+ttk::style configure Toolbar.TFrame -background $color_bg_panel
+ttk::style configure Toolbar.TLabel \
+	-background $color_bg_panel -foreground $color_fg
+
+ttk::style configure TMenubutton \
+	-background $color_bg_overlay \
+	-foreground $color_fg \
+	-bordercolor $color_border_emphasis \
+	-arrowcolor $color_fg_muted \
+	-padding {8 4}
+ttk::style map TMenubutton \
+	-background [list active $color_bg_active] \
+	-bordercolor [list active $color_border_emphasis]
+
+ttk::style configure TRadiobutton \
+	-background $color_bg -foreground $color_fg -focuscolor $color_accent \
+	-indicatormargin {0 2 6 2} \
+	-indicatorbackground $color_bg_overlay \
+	-indicatorforeground $color_bg_overlay \
+	-upperbordercolor $color_border_emphasis \
+	-lowerbordercolor $color_border_emphasis
+ttk::style map TRadiobutton \
+	-background [list active $color_bg] \
+	-foreground [list disabled $color_fg_subtle] \
+	-indicatorbackground [list selected $color_accent_emphasis active $color_bg_active disabled $color_bg_panel] \
+	-indicatorforeground [list selected $color_fg disabled $color_fg_subtle] \
+	-upperbordercolor [list selected $color_accent_emphasis focus $color_accent] \
+	-lowerbordercolor [list selected $color_accent_emphasis focus $color_accent]
+
+ttk::style configure TEntry \
+	-fieldbackground $color_bg_overlay \
+	-foreground $color_fg \
+	-bordercolor $color_border_emphasis \
+	-lightcolor $color_bg_overlay \
+	-darkcolor $color_bg_overlay \
+	-insertcolor $color_fg \
+	-padding 5
+ttk::style map TEntry \
+	-bordercolor [list focus $color_accent] \
+	-fieldbackground [list disabled $color_bg_panel]
+
+ttk::style configure TSpinbox \
+	-fieldbackground $color_bg_overlay \
+	-foreground $color_fg \
+	-bordercolor $color_border_emphasis \
+	-arrowcolor $color_fg_muted \
+	-insertcolor $color_fg \
+	-padding 4
+ttk::style map TSpinbox \
+	-bordercolor [list focus $color_accent]
+
+ttk::style configure TCombobox \
+	-fieldbackground $color_bg_overlay \
+	-background $color_bg_overlay \
+	-foreground $color_fg \
+	-bordercolor $color_border_emphasis \
+	-arrowcolor $color_fg_muted \
+	-insertcolor $color_fg \
+	-padding 5
+ttk::style map TCombobox \
+	-fieldbackground [list readonly $color_bg_overlay] \
+	-foreground [list disabled $color_fg_subtle] \
+	-bordercolor [list focus $color_accent]
+
+foreach orient {Horizontal Vertical} {
+	ttk::style configure ${orient}.TScrollbar \
+		-background $color_bg_panel \
+		-troughcolor $color_bg \
+		-bordercolor $color_bg \
+		-arrowcolor $color_fg_muted \
+		-lightcolor $color_bg_panel \
+		-darkcolor $color_bg_panel
+	ttk::style map ${orient}.TScrollbar \
+		-background [list active $color_bg_active] \
+		-arrowcolor [list active $color_fg]
+}
+
+ttk::style configure TPanedwindow -background $color_bg
+ttk::style configure Sash \
+	-sashthickness 6 -gripcount 0 -lightcolor $color_bg -darkcolor $color_bg
+
+ttk::style configure TSeparator -background $color_border
+
+ttk::style configure TProgressbar \
+	-background $color_accent_emphasis -troughcolor $color_bg_overlay \
+	-bordercolor $color_bg_overlay
+
+ttk::style configure TNotebook -background $color_bg -bordercolor $color_border
+ttk::style configure TNotebook.Tab \
+	-background $color_bg_panel -foreground $color_fg_muted -padding {10 4}
+ttk::style map TNotebook.Tab \
+	-background [list selected $color_bg] \
+	-foreground [list selected $color_fg]
+
+ttk::style configure Treeview \
+	-background $color_bg -fieldbackground $color_bg -foreground $color_fg
+ttk::style configure Treeview.Heading \
+	-background $color_bg_panel -foreground $color_fg_muted -relief flat
+ttk::style map Treeview \
+	-background [list selected $color_selection_bg] \
+	-foreground [list selected $color_selection_fg]
+ttk::style map Treeview.Heading \
+	-background [list active $color_bg_active]
+
+# lib/themed.tcl's color::sync_with_theme looks colors up from a style
+# literally named "Default" -- configure it explicitly so the lookup
+# always resolves rather than relying on ttk's fallback behavior.
+ttk::style configure Default \
+	-selectbackground $color_selection_bg -selectforeground $color_selection_fg
+
+. configure -background $color_bg
+
+# Set on macOS once the title bar is successfully extended over the window
+# content (see below), so .header knows to pad itself clear of the
+# traffic-light buttons that then float over its top-left corner.
+set using_custom_titlebar 0
+
+if {[is_MacOSX]} {
+	# Force the native dark title bar/traffic-light chrome regardless of
+	# the system-wide light/dark setting, so it doesn't clash with the
+	# dark theme. Older Tk builds lack -appearance entirely, hence catch.
+	catch {wm attributes . -appearance darkaqua}
+
+	# Extend the window's content under the title bar (the same mechanism
+	# native macOS apps use for a custom-colored title bar) so the sliver
+	# behind the traffic-light buttons picks up our own panel color instead
+	# of staying the fixed system dark-gray titlebar. Root's own background
+	# is what shows through there, so it's set to match the toolbar right
+	# below it; .header adds top padding so its buttons clear the buttons.
+	if {![catch {
+		wm attributes . -stylemask {
+			titled closable miniaturizable resizable fullsizecontentview
+		}
+	}]} {
+		. configure -background $color_bg_panel
+		set using_custom_titlebar 1
+	}
+}
 
 if {[is_Windows] || [is_MacOSX]} {
 	option add *Menu.tearOff 0
@@ -1026,6 +1258,18 @@ proc load_config {include_global} {
 
 enable_option picker
 enable_option gitdir_discovery
+
+disable_option nopushbutton
+for {set i 0} {$i < [llength $argv]} {incr i} {
+	set a [lindex $argv $i]
+	switch -- $a {
+	--nopushbutton {
+		enable_option nopushbutton
+		set argv [lreplace $argv $i $i]
+	}
+	}
+}
+
 if {[regexp {^git-(.+)$} [file tail $argv0] _junk subcommand]} {
 	unset _junk
 } else {
@@ -1293,6 +1537,11 @@ set last_revert_enc {}
 set nullid [string repeat 0 $hashlength]
 set nullid2 "[string repeat 0 [expr $hashlength - 1]]1"
 
+set display_untracked 0
+if {[is_config_true gui.displayuntracked]} {
+	set display_untracked 1
+}
+
 ######################################################################
 ##
 ## task management
@@ -1444,7 +1693,7 @@ proc have_info_exclude {} {
 }
 
 proc rescan_stage2 {fd after} {
-	global rescan_active buf_rdi buf_rdf buf_rlo
+	global rescan_active buf_rdi buf_rdf buf_rlo display_untracked
 
 	if {$fd ne {}} {
 		read $fd
@@ -1469,7 +1718,7 @@ proc rescan_stage2 {fd after} {
 	fileevent $fd_di readable [list read_diff_index $fd_di $after]
 	fileevent $fd_df readable [list read_diff_files $fd_df $after]
 
-	if {[is_config_true gui.displayuntracked]} {
+	if {$display_untracked == 1} {
 		set fd_lo [git_read [concat ls-files --others -z $ls_others]]
 		fconfigure $fd_lo -blocking 0 -translation binary
 		fileevent $fd_lo readable [list read_ls_others $fd_lo $after]
@@ -1853,6 +2102,7 @@ proc display_all_files {} {
 	global file_states file_lists
 	global last_clicked
 	global files_warning
+	global search_var
 
 	$ui_index conf -state normal
 	$ui_workdir conf -state normal
@@ -1865,8 +2115,10 @@ proc display_all_files {} {
 	set file_lists($ui_workdir) [list]
 
 	set to_display [lsort [array names file_states]]
+
 	set display_limit [get_config gui.maxfilesdisplayed]
 	set displayed 0
+
 	foreach path $to_display {
 		set s $file_states($path)
 		set m [lindex $s 0]
@@ -1894,9 +2146,11 @@ proc display_all_files {} {
 			set s [string index $m 1]
 		}
 		if {$s ne {_}} {
-			display_all_files_helper $ui_workdir $path \
-				$icon_name $s
-			incr displayed
+			if {$search_var eq "" || [string match "*$search_var*" $path]} {
+				display_all_files_helper $ui_workdir $path \
+					$icon_name $s
+				incr displayed
+			}
 		}
 	}
 
@@ -1917,7 +2171,7 @@ static unsigned char mask_bits[] = {
 	0xfe, 0x1f, 0xfe, 0x1f, 0xfe, 0x1f};
 }
 
-image create bitmap file_plain -background white -foreground black -data {
+image create bitmap file_plain -background $color_bg -foreground $color_fg_muted -data {
 #define plain_width 14
 #define plain_height 15
 static unsigned char plain_bits[] = {
@@ -1926,7 +2180,7 @@ static unsigned char plain_bits[] = {
 	0x02, 0x10, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_mod -background white -foreground blue -data {
+image create bitmap file_mod -background $color_bg -foreground $color_cyan -data {
 #define mod_width 14
 #define mod_height 15
 static unsigned char mod_bits[] = {
@@ -1935,7 +2189,7 @@ static unsigned char mod_bits[] = {
 	0xfa, 0x17, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_fulltick -background white -foreground "#007000" -data {
+image create bitmap file_fulltick -background $color_bg -foreground $color_green -data {
 #define file_fulltick_width 14
 #define file_fulltick_height 15
 static unsigned char file_fulltick_bits[] = {
@@ -1944,7 +2198,7 @@ static unsigned char file_fulltick_bits[] = {
 	0x62, 0x10, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_question -background white -foreground black -data {
+image create bitmap file_question -background $color_bg -foreground $color_red -data {
 #define file_question_width 14
 #define file_question_height 15
 static unsigned char file_question_bits[] = {
@@ -1953,7 +2207,7 @@ static unsigned char file_question_bits[] = {
 	0x62, 0x10, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_removed -background white -foreground red -data {
+image create bitmap file_removed -background $color_bg -foreground $color_red -data {
 #define file_removed_width 14
 #define file_removed_height 15
 static unsigned char file_removed_bits[] = {
@@ -1962,7 +2216,7 @@ static unsigned char file_removed_bits[] = {
 	0x1a, 0x16, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_merge -background white -foreground blue -data {
+image create bitmap file_merge -background $color_bg -foreground $color_blue -data {
 #define file_merge_width 14
 #define file_merge_height 15
 static unsigned char file_merge_bits[] = {
@@ -1971,7 +2225,7 @@ static unsigned char file_merge_bits[] = {
 	0xfa, 0x17, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-image create bitmap file_statechange -background white -foreground green -data {
+image create bitmap file_statechange -background $color_bg -foreground $color_green -data {
 #define file_statechange_width 14
 #define file_statechange_height 15
 static unsigned char file_statechange_bits[] = {
@@ -1992,7 +2246,7 @@ set all_icons(T$ui_index)   file_statechange
 
 set all_icons(_$ui_workdir) file_plain
 set all_icons(M$ui_workdir) file_mod
-set all_icons(D$ui_workdir) file_question
+set all_icons(D$ui_workdir) file_removed
 set all_icons(U$ui_workdir) file_merge
 set all_icons(O$ui_workdir) file_plain
 set all_icons(T$ui_workdir) file_statechange
@@ -2371,7 +2625,7 @@ proc select_first_diff {after} {
 	global ui_workdir
 
 	if {[find_next_diff $ui_workdir {} 1 {^_?U}] ||
-	    [find_next_diff $ui_workdir {} 1 {[^O]$}]} {
+		[find_next_diff $ui_workdir {} 1 {[^O]$}]} {
 		next_diff $after
 	} else {
 		uplevel #0 $after
@@ -2599,6 +2853,24 @@ proc focus_widget {widget} {
 	}
 }
 
+proc hotkey_apply_or_revert_lines {revert} {
+	global ui_diff
+	set selected [$ui_diff tag nextrange sel 0.0]
+	if {$selected == {}} {
+		if {$revert} {
+			do_revert_selection
+		}
+	} else {
+		apply_or_revert_range_or_line 0 0 $revert
+	}
+}
+
+proc toggle_display_untracked {} {
+	global display_untracked
+	set display_untracked [expr !$display_untracked]
+	do_rescan
+}
+
 proc toggle_commit_type {} {
 	global commit_type_is_amend
 	set commit_type_is_amend [expr !$commit_type_is_amend]
@@ -2798,6 +3070,16 @@ proc commit_btn_caption {} {
 
 if {[is_enabled multicommit] || [is_enabled singlecommit]} {
 	menu .mbar.commit
+
+	.mbar.commit add checkbutton \
+		-label [mc "Display Untracked"] \
+		-accelerator $M1T-G \
+		-variable display_untracked \
+		-command ui_do_rescan
+
+	lappend disable_on_lock \
+		[list .mbar.commit entryconf [.mbar.commit index last] -state]
+	.mbar.commit add separator
 
 	if {![is_enabled nocommit]} {
 		.mbar.commit add checkbutton \
@@ -3002,7 +3284,7 @@ proc normalize_relpath {path} {
 	foreach item [file split $path] {
 		if {$item eq {.}} continue
 		if {$item eq {..} && [llength $elements] > 0
-		    && [lindex $elements end] ne {..}} {
+			&& [lindex $elements end] ne {..}} {
 			set elements [lrange $elements 0 end-1]
 			continue
 		}
@@ -3139,20 +3421,73 @@ default {
 }
 }
 
-# -- Branch Control
+# -- Header Control
 #
-ttk::frame .branch
-ttk::label .branch.l1 \
-	-text [mc "Current Branch:"] \
-	-anchor w \
-	-justify left
-ttk::label .branch.cb \
+if {$using_custom_titlebar} {
+	# Clears the traffic-light buttons, which float over this frame's
+	# top-left corner now that the title bar shows our own panel color.
+	set header_padding {10 34 10 9}
+} else {
+	set header_padding {10 9}
+}
+ttk::frame .header -style Toolbar.TFrame -padding $header_padding
+ttk::label .header.cb \
+	-style Toolbar.TLabel \
 	-textvariable current_branch \
 	-anchor w \
-	-justify left
-pack .branch.l1 -side left
-pack .branch.cb -side left -fill x
-pack .branch -side top -fill x
+	-justify right
+
+ttk::frame .header.buttons -style Toolbar.TFrame
+
+rbutton .header.buttons.rescan -text [mc Rescan] \
+	-background $color_bg_panel \
+	-command ui_do_rescan
+pack .header.buttons.rescan -side top -fill x
+lappend disable_on_lock \
+	{.header.buttons.rescan conf -state}
+
+rbutton .header.buttons.incall -text [mc "Stage Changed"] \
+	-background $color_bg_panel \
+	-command do_add_all
+pack .header.buttons.incall -side top -fill x
+lappend disable_on_lock \
+	{.header.buttons.incall conf -state}
+
+rcheckbutton .header.buttons.untracked \
+	-background $color_bg_panel \
+	-text [mc "Display Untracked"] \
+	-variable display_untracked \
+	-command ui_do_rescan
+
+lappend disable_on_lock \
+	[list .header.buttons.untracked conf -state]
+
+
+ttk::frame .header.search_frame -style Toolbar.TFrame
+pack .header.search_frame -side top -fill x -pady {0 10}
+
+set search_var ""
+rentry .header.search_frame.entry -textvariable search_var
+pack .header.search_frame.entry -side left -expand 1 -fill x
+
+proc filter_unstaged_files {varName index op} {
+	display_all_files
+}
+
+# Trigger the filter function when search_var changes
+trace add variable search_var write filter_unstaged_files
+
+
+
+pack .header.buttons -side left -fill x
+# Rescan gets no leading padx (0, not 8) so its left edge lines up with the
+# search box above it -- both sit flush against .header's own left padding.
+# Trailing padx on each button still gives the usual gap between them.
+pack .header.buttons.rescan -side left -fill x -padx {0 8}
+pack .header.buttons.incall -side left -fill x -padx 8
+pack .header.buttons.untracked -side left -fill x -padx 8
+pack .header.cb -side right -fill x
+pack .header -side top -fill x -pady {0 10}
 
 # -- Main Window Layout
 #
@@ -3165,7 +3500,7 @@ pack .vpane -anchor n -side top -fill both -expand 1
 
 textframe .vpane.files.workdir -height 100 -width 200
 tlabel .vpane.files.workdir.title -text [mc "Unstaged Changes"] \
-	-background lightsalmon -foreground black
+	-background $color_bg_panel -foreground $color_danger
 ttext $ui_workdir \
 	-borderwidth 0 \
 	-width 20 -height 10 \
@@ -3187,7 +3522,7 @@ pack $ui_workdir -side left -fill both -expand 1
 textframe .vpane.files.index -height 100 -width 200
 tlabel .vpane.files.index.title \
 	-text [mc "Staged Changes (Will Commit)"] \
-	-background lightgreen -foreground black
+	-background $color_bg_panel -foreground $color_success
 ttext $ui_index \
 	-borderwidth 0 \
 	-width 20 -height 10 \
@@ -3237,45 +3572,6 @@ ttk::frame .vpane.lower.diff -relief sunken -borderwidth 1 -height 500
 .vpane.lower pane .vpane.lower.diff -weight 1
 .vpane.lower pane .vpane.lower.commarea -weight 0
 
-# -- Commit Area Buttons
-#
-ttk::frame .vpane.lower.commarea.buttons
-ttk::label .vpane.lower.commarea.buttons.l -text {} \
-	-anchor w \
-	-justify left
-pack .vpane.lower.commarea.buttons.l -side top -fill x
-pack .vpane.lower.commarea.buttons -side left -fill y
-
-ttk::button .vpane.lower.commarea.buttons.rescan -text [mc Rescan] \
-	-command ui_do_rescan
-pack .vpane.lower.commarea.buttons.rescan -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.rescan conf -state}
-
-ttk::button .vpane.lower.commarea.buttons.incall -text [mc "Stage Changed"] \
-	-command do_add_all
-pack .vpane.lower.commarea.buttons.incall -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.incall conf -state}
-
-if {![is_enabled nocommitmsg]} {
-	ttk::button .vpane.lower.commarea.buttons.signoff -text [mc "Sign Off"] \
-		-command do_signoff
-	pack .vpane.lower.commarea.buttons.signoff -side top -fill x
-}
-
-ttk::button .vpane.lower.commarea.buttons.commit -text [commit_btn_caption] \
-	-command do_commit
-pack .vpane.lower.commarea.buttons.commit -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.commit conf -state}
-
-if {![is_enabled nocommit]} {
-	ttk::button .vpane.lower.commarea.buttons.push -text [mc Push] \
-		-command do_push_anywhere
-	pack .vpane.lower.commarea.buttons.push -side top -fill x
-}
-
 # -- Commit Message Buffer
 #
 ttk::frame .vpane.lower.commarea.buffer
@@ -3284,7 +3580,7 @@ set ui_comm .vpane.lower.commarea.buffer.frame.t
 set ui_coml .vpane.lower.commarea.buffer.header.l
 
 if {![is_enabled nocommit]} {
-	ttk::checkbutton .vpane.lower.commarea.buffer.header.amend \
+	rcheckbutton .vpane.lower.commarea.buffer.header.amend \
 		-text [mc "Amend Last Commit"] \
 		-variable commit_type_is_amend \
 		-command do_select_commit_type
@@ -3311,7 +3607,7 @@ trace add variable commit_type write trace_commit_type
 pack $ui_coml -side left -fill x
 
 if {![is_enabled nocommit]} {
-	pack .vpane.lower.commarea.buffer.header.amend -side right
+	pack .vpane.lower.commarea.buffer.header.amend -side right -padx 7
 }
 
 textframe .vpane.lower.commarea.buffer.frame
@@ -3323,7 +3619,7 @@ ttext $ui_comm \
 	-takefocus 1 \
 	-highlightthickness 1 \
 	-relief sunken \
-	-width $repo_config(gui.commitmsgwidth) -height 9 -wrap none \
+	-width $repo_config(gui.commitmsgwidth) -height 15 -wrap none \
 	-font font_diff \
 	-xscrollcommand {.vpane.lower.commarea.buffer.frame.sbx set} \
 	-yscrollcommand {.vpane.lower.commarea.buffer.frame.sby set}
@@ -3337,9 +3633,9 @@ ttk::scrollbar .vpane.lower.commarea.buffer.frame.sby \
 pack .vpane.lower.commarea.buffer.frame.sbx -side bottom -fill x
 pack .vpane.lower.commarea.buffer.frame.sby -side right -fill y
 pack $ui_comm -side left -fill y
-pack .vpane.lower.commarea.buffer.header -side top -fill x
+pack .vpane.lower.commarea.buffer.header -side top -fill x -pady 7
 pack .vpane.lower.commarea.buffer.frame -side left -fill y
-pack .vpane.lower.commarea.buffer -side left -fill y
+pack .vpane.lower.commarea.buffer -side left -fill y -padx 7 -pady 0
 
 # -- Commit Message Buffer Context Menu
 #
@@ -3400,21 +3696,21 @@ proc trace_current_diff_path {varname args} {
 }
 trace add variable current_diff_path write trace_current_diff_path
 
-gold_frame .vpane.lower.diff.header
+gold_frame .vpane.lower.diff.header -background $color_bg_panel
 tlabel .vpane.lower.diff.header.status \
-	-background gold \
-	-foreground black \
+	-background $color_bg_panel \
+	-foreground $color_fg_muted \
 	-width $max_status_desc \
 	-anchor w \
 	-justify left
 tlabel .vpane.lower.diff.header.file \
-	-background gold \
-	-foreground black \
+	-background $color_bg_panel \
+	-foreground $color_fg \
 	-anchor w \
 	-justify left
 tlabel .vpane.lower.diff.header.path \
-	-background gold \
-	-foreground blue \
+	-background $color_bg_panel \
+	-foreground $color_accent \
 	-anchor w \
 	-justify left \
 	-font [eval font create [font configure font_ui] -underline 1] \
@@ -3463,7 +3759,7 @@ pack $ui_diff -side left -fill both -expand 1
 pack .vpane.lower.diff.header -side top -fill x
 pack .vpane.lower.diff.body -side bottom -fill both -expand 1
 
-foreach {n c} {0 black 1 red4 2 green4 3 yellow4 4 blue4 5 magenta4 6 cyan4 7 grey60} {
+foreach {n c} {0 #6e7681 1 #f85149 2 #3fb950 3 #d29922 4 #58a6ff 5 #bc8cff 6 #39c5cf 7 #b1bac4} {
 	$ui_diff tag configure clr4$n -background $c
 	$ui_diff tag configure clri4$n -foreground $c
 	$ui_diff tag configure clr3$n -foreground $c
@@ -3472,41 +3768,45 @@ foreach {n c} {0 black 1 red4 2 green4 3 yellow4 4 blue4 5 magenta4 6 cyan4 7 gr
 $ui_diff tag configure clr1 -font font_diffbold
 $ui_diff tag configure clr4 -underline 1
 
-$ui_diff tag conf d_info -foreground blue -font font_diffbold
-$ui_diff tag conf d_rescan -foreground blue -underline 1 -font font_diffbold
+$ui_diff tag conf d_info -foreground $color_accent -font font_diffbold
+$ui_diff tag conf d_rescan -foreground $color_accent -underline 1 -font font_diffbold
 $ui_diff tag bind d_rescan <Button-1> { clear_diff; rescan ui_ready 0 }
 
 $ui_diff tag conf d_cr -elide true
-$ui_diff tag conf d_@ -font font_diffbold
-$ui_diff tag conf d_+ -foreground {#00a000}
-$ui_diff tag conf d_- -foreground red
+$ui_diff tag conf d_@ \
+	-foreground $color_accent \
+	-background $color_bg_panel \
+	-font font_diffbold
 
-$ui_diff tag conf d_++ -foreground {#00a000}
-$ui_diff tag conf d_-- -foreground red
+$ui_diff tag conf d_+ -foreground $color_green -background {#0a2818}
+$ui_diff tag conf d_- -foreground $color_red -background {#2d0f0f}
+
+$ui_diff tag conf d_++ -foreground $color_green -background {#0a2818}
+$ui_diff tag conf d_-- -foreground $color_red -background {#2d0f0f}
 $ui_diff tag conf d_+s \
-	-foreground {#00a000} \
-	-background {#e2effa}
+	-foreground $color_fg \
+	-background {#1b4d2e}
 $ui_diff tag conf d_-s \
-	-foreground red \
-	-background {#e2effa}
+	-foreground $color_fg \
+	-background {#6e1414}
 $ui_diff tag conf d_s+ \
-	-foreground {#00a000} \
-	-background ivory1
+	-foreground $color_fg \
+	-background {#1b4d2e}
 $ui_diff tag conf d_s- \
-	-foreground red \
-	-background ivory1
+	-foreground $color_fg \
+	-background {#6e1414}
 
 $ui_diff tag conf d< \
-	-foreground orange \
+	-foreground $color_attention \
 	-font font_diffbold
 $ui_diff tag conf d| \
-	-foreground orange \
+	-foreground $color_attention \
 	-font font_diffbold
 $ui_diff tag conf d= \
-	-foreground orange \
+	-foreground $color_attention \
 	-font font_diffbold
 $ui_diff tag conf d> \
-	-foreground orange \
+	-foreground $color_attention \
 	-font font_diffbold
 
 $ui_diff tag raise sel
@@ -3812,8 +4112,12 @@ bind $ui_diff <$M1B-Key-v> {break}
 bind $ui_diff <$M1B-Key-V> {break}
 bind $ui_diff <$M1B-Key-a> {%W tag add sel 0.0 end;break}
 bind $ui_diff <$M1B-Key-A> {%W tag add sel 0.0 end;break}
-bind $ui_diff <$M1B-Key-j> {do_revert_selection;break}
-bind $ui_diff <$M1B-Key-J> {do_revert_selection;break}
+bind $ui_diff <$M1B-Key-j> {hotkey_apply_or_revert_lines 1; do_rescan;break}
+bind $ui_diff <$M1B-Key-J> {hotkey_apply_or_revert_lines 1; do_rescan;break}
+bind $ui_diff <$M1B-Key-u> {hotkey_apply_or_revert_lines 0; do_rescan;break}
+bind $ui_diff <$M1B-Key-U> {hotkey_apply_or_revert_lines 0; do_rescan;break}
+bind $ui_diff <$M1B-Key-t> {hotkey_apply_or_revert_lines 0; do_rescan;break}
+bind $ui_diff <$M1B-Key-T> {hotkey_apply_or_revert_lines 0; do_rescan;break}
 bind $ui_diff <Key-Up>     {catch {%W yview scroll -1 units};break}
 bind $ui_diff <Key-Down>   {catch {%W yview scroll  1 units};break}
 bind $ui_diff <Key-Left>   {catch {%W xview scroll -1 units};break}
@@ -3839,15 +4143,20 @@ if {[is_enabled transport]} {
 	bind . <$M1B-Key-P> do_push_anywhere
 }
 
+bind . <$M1B-Key-f> {focus .header.search_frame.entry.e}
+bind . <$M1B-Key-k> {do_gitk --all}
+
 bind .   <Key-F5>     ui_do_rescan
 bind .   <$M1B-Key-r> ui_do_rescan
 bind .   <$M1B-Key-R> ui_do_rescan
-bind .   <$M1B-Key-s> do_signoff
-bind .   <$M1B-Key-S> do_signoff
+# bind .   <$M1B-Key-s> do_signoff
+# bind .   <$M1B-Key-S> do_signoff
 bind .   <$M1B-Key-t> { toggle_or_diff toggle %W }
 bind .   <$M1B-Key-T> { toggle_or_diff toggle %W }
 bind .   <$M1B-Key-u> { toggle_or_diff toggle %W }
 bind .   <$M1B-Key-U> { toggle_or_diff toggle %W }
+bind .   <$M1B-Key-G> toggle_display_untracked
+bind .   <$M1B-Key-g> toggle_display_untracked
 bind .   <$M1B-Key-j> do_revert_selection
 bind .   <$M1B-Key-J> do_revert_selection
 bind .   <$M1B-Key-i> do_add_all
@@ -3954,7 +4263,7 @@ if {[winfo exists $ui_comm]} {
 
 	# Grey out comment lines (which are stripped from the final commit message by
 	# wash_commit_message).
-	$ui_comm tag configure commit_comment -foreground gray
+	$ui_comm tag configure commit_comment -foreground $color_fg_muted
 	proc dim_commit_comment_lines {} {
 		global ui_comm comment_string
 		$ui_comm tag remove commit_comment 1.0 end
@@ -4007,7 +4316,7 @@ after 1 {
 	}
 
 	if {[is_enabled nocommitmsg]} {
-		$ui_comm configure -state disabled -background gray
+		$ui_comm configure -state disabled -background $color_bg_panel
 	}
 }
 if {[is_enabled multicommit] && ![is_config_false gui.gcwarning]} {

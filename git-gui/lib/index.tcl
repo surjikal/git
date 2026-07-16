@@ -37,10 +37,10 @@ proc rescan_on_error {err {after {}}} {
 	$w.msg insert end $s bold \n\n$err {}
 	$w.msg configure -state disabled
 
-	ttk::button $w.continue \
+	rbutton $w.continue \
 		-text [mc "Continue"] \
 		-command [list destroy $w]
-	ttk::button $w.unlock \
+	rbutton $w.unlock \
 		-text [mc "Unlock Index"] \
 		-command "destroy $w; _delete_indexlock"
 	grid $w.msg - $w.vs -sticky news

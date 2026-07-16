@@ -125,6 +125,9 @@ proc do_push_anywhere {} {
 	set w .push_setup
 	toplevel $w
 	catch {wm attributes $w -type dialog}
+	if {[is_MacOSX]} {
+		catch {wm attributes $w -appearance darkaqua}
+	}
 	wm withdraw $w
 	wm geometry $w "+[winfo rootx .]+[winfo rooty .]"
 	pave_toplevel $w
@@ -134,11 +137,11 @@ proc do_push_anywhere {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.create -text [mc Push] \
+	rbutton $w.buttons.create -text [mc Push] \
 		-default active \
 		-command [list start_push_anywhere_action $w]
 	pack $w.buttons.create -side right
-	ttk::button $w.buttons.cancel -text [mc "Cancel"] \
+	rbutton $w.buttons.cancel -text [mc "Cancel"] \
 		-default normal \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5
@@ -199,15 +202,15 @@ proc do_push_anywhere {} {
 	pack $w.dest -anchor nw -fill x -pady 5 -padx 5
 
 	ttk::labelframe $w.options -text [mc "Transfer Options"]
-	ttk::checkbutton $w.options.force \
+	rcheckbutton $w.options.force \
 		-text [mc "Force overwrite existing branch (may discard changes)"] \
 		-variable push_force
 	grid $w.options.force -columnspan 2 -sticky w
-	ttk::checkbutton $w.options.thin \
+	rcheckbutton $w.options.thin \
 		-text [mc "Use thin pack (for slow network connections)"] \
 		-variable push_thin
 	grid $w.options.thin -columnspan 2 -sticky w
-	ttk::checkbutton $w.options.tags \
+	rcheckbutton $w.options.tags \
 		-text [mc "Include tags"] \
 		-variable push_tags
 	grid $w.options.tags -columnspan 2 -sticky w

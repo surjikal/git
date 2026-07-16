@@ -27,11 +27,11 @@ constructor dialog {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.create -text [mc Add] \
+	rbutton $w.buttons.create -text [mc Add] \
 		-default active \
 		-command [cb _add]
 	pack $w.buttons.create -side right
-	ttk::button $w.buttons.cancel -text [mc Cancel] \
+	rbutton $w.buttons.cancel -text [mc Cancel] \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5
 	pack $w.buttons -side bottom -fill x -pady 10 -padx 10

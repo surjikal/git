@@ -46,11 +46,11 @@ constructor new {i_w i_text args} {
 	ttk::frame  $w
 	ttk::label  $w.l       -text [mc Find:]
 	tentry  $w.ent -textvariable ${__this}::searchstring -background lightgreen
-	ttk::button $w.bn      -text [mc Next] -command [cb find_next]
-	ttk::button $w.bp      -text [mc Prev] -command [cb find_prev]
-	ttk::checkbutton $w.re -text [mc RegExp] \
+	rbutton $w.bn      -text [mc Next] -command [cb find_next]
+	rbutton $w.bp      -text [mc Prev] -command [cb find_prev]
+	rcheckbutton $w.re -text [mc RegExp] \
 		-variable ${__this}::regexpsearch -command [cb _incrsearch]
-	ttk::checkbutton $w.cs -text [mc Case] \
+	rcheckbutton $w.cs -text [mc Case] \
 		-variable ${__this}::casesensitive -command [cb _incrsearch]
 	pack   $w.l   -side left
 	pack   $w.cs  -side right

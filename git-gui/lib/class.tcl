@@ -160,6 +160,9 @@ proc make_toplevel {t w args} {
 		set top .$w
 		set pfx $top
 		toplevel $top
+		if {[is_MacOSX]} {
+			catch {wm attributes $top -appearance darkaqua}
+		}
 		set ::root_exists 1
 	} else {
 		set top .

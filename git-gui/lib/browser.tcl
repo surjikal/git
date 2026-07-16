@@ -22,6 +22,7 @@ field ls_buf     {}; # Buffered record output from ls-tree
 
 constructor new {commit {path {}}} {
 	global cursor_ptr M1B
+	global color_bg color_fg
 	make_dialog top w
 	wm withdraw $top
 	wm title $top [mc "%s (%s): File Browser" [appname] [reponame]]
@@ -44,7 +45,7 @@ constructor new {commit {path {}}} {
 
 	ttk::frame $w.list
 	set w_list $w.list.l
-	text $w_list -background white -foreground black \
+	text $w_list -background $color_bg -foreground $color_fg \
 		-borderwidth 0 \
 		-cursor $cursor_ptr \
 		-state disabled \
@@ -282,11 +283,11 @@ constructor dialog {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.browse -text [mc Browse] \
+	rbutton $w.buttons.browse -text [mc Browse] \
 		-default active \
 		-command [cb _open]
 	pack $w.buttons.browse -side right
-	ttk::button $w.buttons.cancel -text [mc Cancel] \
+	rbutton $w.buttons.cancel -text [mc Cancel] \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5
 	pack $w.buttons -side bottom -fill x -pady 10 -padx 10

@@ -26,10 +26,10 @@ proc do_stats {} {
 	wm geometry $w "+[winfo rootx .]+[winfo rooty .]"
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.close -text [mc Close] \
+	rbutton $w.buttons.close -text [mc Close] \
 		-default active \
 		-command [list destroy $w]
-	ttk::button $w.buttons.gc -text [mc "Compress Database"] \
+	rbutton $w.buttons.gc -text [mc "Compress Database"] \
 		-default normal \
 		-command "destroy $w;do_gc"
 	pack $w.buttons.close -side right

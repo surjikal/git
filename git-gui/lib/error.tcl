@@ -71,6 +71,7 @@ proc ask_popup {msg} {
 }
 
 proc hook_failed_popup {hook msg {is_fatal 1}} {
+	global color_bg color_fg
 	set w .hookfail
 	Dialog $w
 	wm withdraw $w
@@ -81,8 +82,8 @@ proc hook_failed_popup {hook msg {is_fatal 1}} {
 		-justify left \
 		-font font_uibold
 	text $w.m.t \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg \
 		-borderwidth 1 \
 		-relief sunken \
 		-width 80 -height 10 \
@@ -105,7 +106,7 @@ proc hook_failed_popup {hook msg {is_fatal 1}} {
 	$w.m.t insert 1.0 $msg
 	$w.m.t conf -state disabled
 
-	ttk::button $w.ok -text OK \
+	rbutton $w.ok -text OK \
 		-width 15 \
 		-command "destroy $w"
 	pack $w.ok -side bottom -anchor e -pady 10 -padx 10

@@ -24,13 +24,13 @@ constructor dialog {} {
 
 	ttk::frame $w.buttons
 	set w_delete $w.buttons.delete
-	ttk::button $w_delete \
+	rbutton $w_delete \
 		-text [mc Delete] \
 		-default active \
 		-state disabled \
 		-command [cb _delete]
 	pack $w_delete -side right
-	ttk::button $w.buttons.cancel \
+	rbutton $w.buttons.cancel \
 		-text [mc Cancel] \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5

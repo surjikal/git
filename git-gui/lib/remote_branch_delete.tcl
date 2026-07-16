@@ -36,11 +36,11 @@ constructor dialog {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.delete -text [mc Delete] \
+	rbutton $w.buttons.delete -text [mc Delete] \
 		-default active \
 		-command [cb _delete]
 	pack $w.buttons.delete -side right
-	ttk::button $w.buttons.cancel -text [mc "Cancel"] \
+	rbutton $w.buttons.cancel -text [mc "Cancel"] \
 		-command [list destroy $w]
 	pack $w.buttons.cancel -side right -padx 5
 	pack $w.buttons -side bottom -fill x -pady 10 -padx 10
@@ -93,7 +93,7 @@ constructor dialog {} {
 		-textvariable @status \
 		-anchor w \
 		-justify left
-	ttk::button $w.heads.footer.rescan \
+	rbutton $w.heads.footer.rescan \
 		-text [mc "Rescan"] \
 		-command [cb _rescan]
 	pack $w.heads.footer.status -side left -fill x

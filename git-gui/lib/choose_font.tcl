@@ -17,6 +17,7 @@ variable all_families [list]  ; # All fonts known to Tk
 
 constructor pick {path title a_family a_size} {
 	variable all_families
+	global color_bg color_fg
 
 	set v_family $a_family
 	set v_size $a_size
@@ -36,11 +37,11 @@ constructor pick {path title a_family a_size} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.select \
+	rbutton $w.buttons.select \
 		-text [mc Select] \
 		-default active \
 		-command [cb _select]
-	ttk::button $w.buttons.cancel \
+	rbutton $w.buttons.cancel \
 		-text [mc Cancel] \
 		-command [list destroy $w]
 	pack $w.buttons.select -side right
@@ -55,8 +56,8 @@ constructor pick {path title a_family a_size} {
 		-anchor w
 	set w_family $w.inner.family.v
 	text $w_family \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg \
 		-borderwidth 1 \
 		-relief sunken \
 		-cursor $::cursor_ptr \
@@ -93,8 +94,8 @@ constructor pick {path title a_family a_size} {
 		-anchor w
 	set w_example $w.example.t
 	text $w_example \
-		-background white \
-		-foreground black \
+		-background $color_bg \
+		-foreground $color_fg \
 		-borderwidth 1 \
 		-relief sunken \
 		-height 3 \

@@ -26,6 +26,7 @@ field sorted_recent       ; # recent repositories (sorted)
 
 constructor pick {} {
 	global M1T M1B
+	global color_accent
 
 	if {[set maxrecent [get_config gui.maxrecentrepo]] eq {}} {
 		set maxrecent 10
@@ -89,7 +90,7 @@ constructor pick {} {
 		-height 3
 	pack $opts -anchor w -fill x
 
-	$opts tag conf link_new -foreground blue -underline 1
+	$opts tag conf link_new -foreground $color_accent -underline 1
 	$opts tag bind link_new <1> [cb _next new]
 	$opts insert end [mc "Create New Repository"] link_new
 	$opts insert end "\n"
@@ -102,7 +103,7 @@ constructor pick {} {
 		bind $top <$M1B-N> [cb _next new]
 	}
 
-	$opts tag conf link_clone -foreground blue -underline 1
+	$opts tag conf link_clone -foreground $color_accent -underline 1
 	$opts tag bind link_clone <1> [cb _next clone]
 	$opts insert end [mc "Clone Existing Repository"] link_clone
 	$opts insert end "\n"
@@ -120,7 +121,7 @@ constructor pick {} {
 		bind $top <$M1B-[string toupper $key]> [cb _next clone]
 	}
 
-	$opts tag conf link_open -foreground blue -underline 1
+	$opts tag conf link_open -foreground $color_accent -underline 1
 	$opts tag bind link_open <1> [cb _next open]
 	$opts insert end [mc "Open Existing Repository"] link_open
 	$opts insert end "\n"
@@ -161,7 +162,7 @@ constructor pick {} {
 			-width 50 \
 			-height $lenrecent
 		$w_recentlist tag conf link \
-			-foreground blue \
+			-foreground $color_accent \
 			-underline 1
 		set home $::env(HOME)
 		set home "[file normalize $home]/"
@@ -192,7 +193,7 @@ constructor pick {} {
 	ttk::frame $w.buttons
 	set w_next $w.buttons.next
 	set w_quit $w.buttons.quit
-	ttk::button $w_quit \
+	rbutton $w_quit \
 		-text [mc "Quit"] \
 		-command exit
 	pack $w_quit -side right -padx 5
@@ -297,7 +298,7 @@ method _open_recent_path {p} {
 method _next {action} {
 	destroy $w_body
 	if {![winfo exists $w_next]} {
-		ttk::button $w_next -default active
+		rbutton $w_next -default active
 		set pos -before
 		if {[tk windowingsystem] eq "win32"} { set pos -after }
 		pack $w_next -side right -padx 5 $pos $w_quit
@@ -365,7 +366,7 @@ method _do_new {} {
 	ttk::entry $w_body.where.t \
 		-textvariable @local_path \
 		-width 50
-	ttk::button $w_body.where.b \
+	rbutton $w_body.where.b \
 		-text [mc "Browse"] \
 		-command [cb _new_local_path]
 	set w_localpath $w_body.where.t
@@ -452,7 +453,7 @@ method _do_clone {} {
 	ttk::entry $args.origin_t \
 		-textvariable @origin_url \
 		-width 50
-	ttk::button $args.origin_b \
+	rbutton $args.origin_b \
 		-text [mc "Browse"] \
 		-command [cb _open_origin]
 	grid $args.origin_l $args.origin_t $args.origin_b -sticky ew
@@ -461,7 +462,7 @@ method _do_clone {} {
 	ttk::entry $args.where_t \
 		-textvariable @local_path \
 		-width 50
-	ttk::button $args.where_b \
+	rbutton $args.where_b \
 		-text [mc "Browse"] \
 		-command [cb _new_local_path]
 	grid $args.where_l $args.where_t $args.where_b -sticky ew
@@ -488,7 +489,7 @@ method _do_clone {} {
 	foreach r $w_types {
 		pack $r -anchor w
 	}
-	ttk::checkbutton $args.type_f.recursive \
+	rcheckbutton $args.type_f.recursive \
 		-text [mc "Recursively clone submodules too"] \
 		-variable @recursive \
 		-onvalue true -offvalue false
@@ -666,7 +667,7 @@ method _do_open {} {
 	ttk::entry $w_body.where.t \
 		-textvariable @local_path \
 		-width 50
-	ttk::button $w_body.where.b \
+	rbutton $w_body.where.b \
 		-text [mc "Browse"] \
 		-command [cb _open_local_path]
 

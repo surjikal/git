@@ -16,7 +16,7 @@ proc do_about {} {
 	pack $w.header -side top -fill x
 
 	ttk::frame $w.buttons
-	ttk::button $w.buttons.close -text {Close} \
+	rbutton $w.buttons.close -text {Close} \
 		-default active \
 		-command [list destroy $w]
 	pack $w.buttons.close -side right

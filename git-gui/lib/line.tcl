@@ -19,7 +19,7 @@ constructor new {i_w i_text args} {
 		-background lightgreen \
 		-validate key \
 		-validatecommand [cb _validate %P]
-	ttk::button $w.bn      -text [mc Go] -command [cb _goto]
+	rbutton $w.bn      -text [mc Go] -command [cb _goto]
 
 	pack   $w.l   -side left
 	pack   $w.bn  -side right
